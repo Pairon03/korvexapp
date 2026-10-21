@@ -1,0 +1,20 @@
+{
+  "name": "korvexapp",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Korvex — plataforma de treinamento personalizado com IA para personal trainers (protótipo)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @korvex/web",
+    "build": "npm run build -w @korvex/web",
+    "build:artifact": "npm run build:artifact -w @korvex/web",
+    "test": "npm run test -w @korvex/core",
+    "typecheck": "npm run typecheck -w @korvex/core && npm run typecheck -w @korvex/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

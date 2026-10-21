@@ -1,0 +1,178 @@
+@import 'tailwindcss';
+
+/* Layout: painel com navegação lateral no desktop e barra inferior no celular; app do aluno em coluna única. */
+/* Tema escuro é o padrão. O tema claro só entra por escolha explícita (data-theme="light"). */
+:root {
+  --bg: #0e1110;
+  --surface: #151917;
+  --surface-2: #1c211f;
+  --surface-3: #252b28;
+  --line: #2b322e;
+  --fg: #e7ece8;
+  --muted: #98a29c;
+  --faint: #6c7670;
+  --accent: #a6e35a;
+  --accent-strong: #c3f27f;
+  --accent-ink: #0e1110;
+  --accent-soft: rgb(166 227 90 / 0.12);
+  --ok: #4fd1a1;
+  --ok-soft: rgb(79 209 161 / 0.13);
+  --warn: #f2c14e;
+  --warn-soft: rgb(242 193 78 / 0.13);
+  --bad: #f2787a;
+  --bad-soft: rgb(242 120 122 / 0.13);
+  --info: #7cb4f5;
+  --info-soft: rgb(124 180 245 / 0.13);
+  --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px rgb(0 0 0 / 0.25);
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f3f5f2;
+  --surface: #ffffff;
+  --surface-2: #eef1ed;
+  --surface-3: #e3e8e2;
+  --line: #d8ded7;
+  --fg: #151a17;
+  --muted: #5a645e;
+  --faint: #7d8780;
+  --accent: #4f8a17;
+  --accent-strong: #3f7310;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(79 138 23 / 0.1);
+  --ok: #0f8a5f;
+  --ok-soft: rgb(15 138 95 / 0.1);
+  --warn: #a86a00;
+  --warn-soft: rgb(168 106 0 / 0.1);
+  --bad: #c43b3e;
+  --bad-soft: rgb(196 59 62 / 0.09);
+  --info: #2f6fbf;
+  --info-soft: rgb(47 111 191 / 0.09);
+  --shadow: 0 1px 2px rgb(20 30 20 / 0.06), 0 6px 18px rgb(20 30 20 / 0.06);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 60;
+  background: var(--surface);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+
+.display-wide {
+  font-variation-settings: 'wdth' 118;
+}
+.display-narrow {
+  font-variation-settings: 'wdth' 78;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gutter {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0.4;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.25s ease-out;
+}
+
+/* Campos numéricos sem setas nativas: mais espaço útil em telas pequenas. */
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
