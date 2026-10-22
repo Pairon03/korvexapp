@@ -80,7 +80,7 @@ export default function StudentDetail() {
       <div className="flex flex-wrap items-start gap-4">
         <Avatar name={student.name} size={52} />
         <div className="min-w-0 flex-1">
-          <h1 className="display-narrow text-[28px] leading-tight font-extrabold">{student.name}</h1>
+          <h1 className="display-narrow text-[21px] leading-tight sm:text-[24px]">{student.name}</h1>
           <p className="text-sm text-muted">
             {goalLabel[student.goal]} · {levelLabel[student.level]} · {student.weeklyFrequency}x/semana · agente {agentVersion.config.name} v{agentVersion.version}
           </p>
@@ -769,7 +769,7 @@ function CycleTab({ student }: { student: Student }) {
           <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-4">
               {current.blockReasons.length > 0 && (
-                <Callout tone={current.state === 'aguardando_validacao' ? 'accent' : current.state === 'suspenso' || current.state === 'falhou' ? 'bad' : 'warn'} title="Por que o ciclo parou">
+                <Callout tone={current.state === 'aguardando_validacao' ? 'info' : current.state === 'suspenso' || current.state === 'falhou' ? 'bad' : 'warn'} title="Por que o ciclo parou">
                   <ul className="list-disc pl-4">
                     {current.blockReasons.map((r) => (
                       <li key={r}>{r}</li>

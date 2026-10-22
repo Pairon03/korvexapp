@@ -20,13 +20,10 @@ import { useStore } from '../state/store';
 import { Select, cx } from './ui';
 
 export function Logo({ className }: { className?: string }) {
+  // Logotipo da marca: KORVEX em Michroma, com o "E" espelhado.
   return (
-    <span className={cx('display-wide flex items-center gap-2 text-[17px] font-extrabold tracking-tight', className)}>
-      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
-        <rect x="1" y="1" width="22" height="22" rx="6" fill="var(--accent)" />
-        <path d="M7 6v12M7 12l7-6M10 10l6 8" stroke="var(--accent-ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </svg>
-      KORVEX
+    <span className={cx('text-[15px] tracking-[0.16em] whitespace-nowrap text-fg', className)} style={{ fontFamily: 'var(--font-display)' }} aria-label="Korvex">
+      KORV<span className="inline-block -scale-x-100">E</span>X
     </span>
   );
 }

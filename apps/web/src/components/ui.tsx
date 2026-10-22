@@ -90,7 +90,7 @@ export const cycleTone: Record<CycleState, Tone> = {
   aguardando_avaliacao: 'warn',
   dados_incompletos: 'warn',
   em_processamento: 'info',
-  aguardando_validacao: 'accent',
+  aguardando_validacao: 'info',
   publicado: 'ok',
   suspenso: 'bad',
   falhou: 'bad',
@@ -275,7 +275,7 @@ export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
-        <h1 className="display-narrow text-[28px] leading-tight font-extrabold sm:text-[32px]">{title}</h1>
+        <h1 className="display-narrow text-[21px] leading-tight sm:text-[25px]">{title}</h1>
         {subtitle && <p className="mt-1 max-w-2xl text-sm text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

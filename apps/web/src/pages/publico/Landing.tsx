@@ -50,8 +50,8 @@ export default function Landing() {
       <section className="gutter mx-auto grid max-w-6xl items-center gap-10 pt-8 pb-16 lg:grid-cols-[1.05fr_1fr] lg:pt-14">
         <div className="min-w-0">
           <p className="eyebrow mb-4">Para personal trainers · ciclos de 45 dias</p>
-          <h1 className="display-wide text-[40px] leading-[0.98] font-extrabold sm:text-[56px] lg:text-[64px]">
-            O treino se atualiza sozinho. <span className="text-accent">As regras são suas.</span>
+          <h1 className="display-wide text-[27px] leading-[1.15] sm:text-[38px] lg:text-[44px]">
+            O treino se atualiza sozinho. <span className="brand-gradient">As regras são suas.</span>
           </h1>
           <p className="mt-5 max-w-xl text-[17px] text-muted">
             Configure um agente de IA com a sua metodologia. A cada ciclo, ele lê os registros do aluno e a reavaliação, propõe a nova versão do treino e o sistema só publica se
@@ -123,7 +123,7 @@ export default function Landing() {
 
       <section id="como-funciona" className="border-y border-line bg-surface">
         <div className="gutter mx-auto max-w-6xl py-16">
-          <h2 className="display-wide text-[32px] font-extrabold sm:text-[40px]">Como um ciclo funciona</h2>
+          <h2 className="display-wide text-[22px] sm:text-[28px]">Como um ciclo funciona</h2>
           <p className="mt-2 max-w-2xl text-muted">Quatro etapas, sempre nesta ordem. A IA só participa da terceira, e não tem permissão para publicar nada.</p>
           <ol className="mt-10 grid gap-8 md:grid-cols-4">
             {[
@@ -133,7 +133,7 @@ export default function Landing() {
               { t: 'O sistema decide', d: 'Validações determinísticas checam biblioteca, limitações, volume e tamanho da mudança. Passou e você autorizou: publica. Senão, chega até você.' },
             ].map((s, i) => (
               <li key={s.t} className="flex flex-col gap-2">
-                <span className="display-wide num text-[44px] leading-none font-extrabold text-accent">{i + 1}</span>
+                <span className="display-wide text-[34px] leading-none brand-gradient">{i + 1}</span>
                 <p className="text-lg font-bold">{s.t}</p>
                 <p className="text-[14px] text-muted">{s.d}</p>
               </li>
@@ -145,7 +145,7 @@ export default function Landing() {
       <section id="agente" className="gutter mx-auto grid max-w-6xl gap-10 py-16 lg:grid-cols-2">
         <div>
           <SlidersHorizontal className="mb-3 text-accent" />
-          <h2 className="display-wide text-[30px] font-extrabold">Um agente que trabalha do seu jeito</h2>
+          <h2 className="display-wide text-[21px] sm:text-[26px]">Um agente que trabalha do seu jeito</h2>
           <p className="mt-3 text-muted">
             Em vez de um prompt solto, você preenche regras: faixas de RPE, descanso mínimo e máximo, séries por grupo muscular, aumento de carga permitido, o que fazer diante de
             desconforto. Instruções livres complementam, mas não desligam nenhuma trava de segurança.
@@ -160,7 +160,7 @@ export default function Landing() {
         </div>
         <div>
           <Ruler className="mb-3 text-accent" />
-          <h2 className="display-wide text-[30px] font-extrabold">Avaliações que podem ser comparadas</h2>
+          <h2 className="display-wide text-[21px] sm:text-[26px]">Avaliações que podem ser comparadas</h2>
           <p className="mt-3 text-muted">
             Peso, altura, circunferências e dobras cutâneas com protocolo registrado. O percentual de gordura só é calculado com protocolo definido, e a fórmula, a versão e as
             limitações ficam guardadas junto com o resultado. Medidas de protocolos diferentes não são misturadas e valores ausentes nunca viram zero.
@@ -198,7 +198,7 @@ export default function Landing() {
 
       <section id="seguranca" className="border-y border-line bg-surface">
         <div className="gutter mx-auto max-w-6xl py-16">
-          <h2 className="display-wide text-[30px] font-extrabold">Segurança e privacidade desde o desenho</h2>
+          <h2 className="display-wide text-[21px] sm:text-[26px]">Segurança e privacidade desde o desenho</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { icon: ShieldCheck, t: 'A IA não publica', d: 'Ela produz uma proposta. Serviços do servidor validam, registram e decidem a publicação.' },
@@ -221,7 +221,7 @@ export default function Landing() {
       </section>
 
       <section id="planos" className="gutter mx-auto max-w-6xl py-16">
-        <h2 className="display-wide text-[30px] font-extrabold">Planos</h2>
+        <h2 className="display-wide text-[21px] sm:text-[26px]">Planos</h2>
         <p className="mt-2 text-muted">Cobrança mensal do personal ou do studio. O aluno não paga nada para usar o app.</p>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {state.subscriptionPlans.map((p, i) => (
@@ -251,7 +251,7 @@ export default function Landing() {
 
       <section id="perguntas" className="border-t border-line bg-surface">
         <div className="gutter mx-auto max-w-3xl py-16">
-          <h2 className="display-wide text-[30px] font-extrabold">Perguntas frequentes</h2>
+          <h2 className="display-wide text-[21px] sm:text-[26px]">Perguntas frequentes</h2>
           <div className="mt-6 flex flex-col divide-y divide-line">
             {[
               ['A IA substitui o personal?', 'Não. Ela aplica as regras que você configurou e prepara uma proposta. Você define quando ela pode publicar sozinha e quando precisa da sua aprovação.'],
@@ -276,7 +276,7 @@ export default function Landing() {
       </section>
 
       <section className="gutter mx-auto max-w-6xl py-16 text-center">
-        <h2 className="display-wide text-[32px] font-extrabold sm:text-[44px]">Veja um ciclo acontecer agora</h2>
+        <h2 className="display-wide text-[22px] sm:text-[30px]">Veja um ciclo acontecer agora</h2>
         <p className="mx-auto mt-3 max-w-xl text-muted">
           No painel de demonstração, clique em <strong className="text-fg">Executar agendador</strong> e acompanhe cinco alunos fictícios chegando ao fim do ciclo, cada um com um
           desfecho diferente.

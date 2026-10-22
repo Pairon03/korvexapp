@@ -72,7 +72,7 @@ export default function Builder() {
       </Link>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="display-narrow text-[28px] font-extrabold">Construtor de treino</h1>
+          <h1 className="display-narrow text-[21px] sm:text-[24px]">Construtor de treino</h1>
           <p className="text-sm text-muted">
             {base ? `Partindo da versão ${base.version}.` : 'Novo programa.'} Ao salvar, uma nova versão é criada; a anterior fica no histórico.
           </p>

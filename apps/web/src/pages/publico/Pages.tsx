@@ -9,7 +9,7 @@ function LegalShell({ title, children }: { title: string; children: React.ReactN
       <Link to="/" className="mb-8 flex w-fit items-center gap-1 text-[13px] text-muted hover:text-fg">
         <ArrowLeft size={14} /> Início
       </Link>
-      <h1 className="display-wide text-[34px] font-extrabold">{title}</h1>
+      <h1 className="display-wide text-[24px]">{title}</h1>
       <div className="my-6">
         <Callout tone="warn" title="Rascunho para revisão jurídica">
           Este texto é um ponto de partida e não garante conformidade legal. Deve ser revisado por profissional qualificado antes do lançamento.
@@ -59,7 +59,7 @@ export function Login() {
         <Logo />
       </Link>
       <div>
-        <h1 className="display-wide text-[30px] font-extrabold">Entrar</h1>
+        <h1 className="display-wide text-[21px] sm:text-[26px]">Entrar</h1>
         <p className="mt-1 text-sm text-muted">Na versão final, o acesso é por e-mail e senha com verificação. Nesta demonstração, escolha um perfil.</p>
       </div>
       <div className="flex flex-col gap-3">

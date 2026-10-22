@@ -59,7 +59,7 @@ export function AlunoHome() {
     <div className="flex flex-col gap-5">
       <div>
         <p className="eyebrow">{formatDate(state.now)}</p>
-        <h1 className="display-narrow text-[30px] leading-tight font-extrabold">Olá, {student.name.split(' ')[0]}</h1>
+        <h1 className="display-narrow text-[22px] leading-tight">Olá, {student.name.split(' ')[0]}</h1>
       </div>
 
       {notes.map((n) => (
@@ -205,7 +205,7 @@ export function Session() {
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="eyebrow">{formatDate(log.date)}</p>
-          <h1 className="display-narrow text-[28px] font-extrabold">{day?.label ?? 'Treino'}</h1>
+          <h1 className="display-narrow text-[21px] sm:text-[24px]">{day?.label ?? 'Treino'}</h1>
         </div>
         <span className={cx('flex items-center gap-1 text-[12px]', saved ? 'text-ok' : 'text-warn')} aria-live="polite">
           {saved ? <Check size={14} /> : <TriangleAlert size={14} />}
@@ -398,7 +398,7 @@ export function AlunoHistory() {
   const label = (pvId: string, dayId: string) => state.plans.flatMap((p) => p.versions).find((v) => v.id === pvId)?.days.find((d) => d.id === dayId)?.label ?? 'Treino';
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="display-narrow text-[28px] font-extrabold">Histórico</h1>
+      <h1 className="display-narrow text-[21px] sm:text-[24px]">Histórico</h1>
       {logs.length === 0 ? (
         <Card>
           <EmptyState title="Nenhum treino ainda">Seus treinos concluídos aparecem aqui.</EmptyState>
@@ -441,7 +441,7 @@ export function AlunoAssessment() {
   const cmp = list.length >= 2 ? compareAssessments(list[1], list[0]) : null;
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="display-narrow text-[28px] font-extrabold">Avaliação</h1>
+      <h1 className="display-narrow text-[21px] sm:text-[24px]">Avaliação</h1>
       <Button size="lg" variant="primary" onClick={() => setOpen(true)}>
         Registrar minhas medidas
       </Button>
@@ -544,7 +544,7 @@ export function AlunoProfile() {
   const json = exportOpen ? JSON.stringify(exportStudentData(state, student.id), null, 2) : '';
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="display-narrow text-[28px] font-extrabold">Perfil</h1>
+      <h1 className="display-narrow text-[21px] sm:text-[24px]">Perfil</h1>
       <Card className="flex flex-col gap-1 p-4 text-sm">
         <p className="font-bold">{student.name}</p>
         <p className="text-muted">{student.email}</p>
