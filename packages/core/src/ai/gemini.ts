@@ -15,6 +15,7 @@ export interface GeminiConfig {
 }
 
 export const GEMINI_DEFAULT_MODEL = 'gemini-3.8-flash';
+export const GEMINI_FALLBACK_MODEL = 'gemini-3.5-flash-lite';
 
 /** Erro que o motor trata como indisponibilidade (nova tentativa, treino vigente mantido). */
 export class GeminiUnavailableError extends Error {
@@ -28,6 +29,15 @@ export class GeminiUnavailableError extends Error {
 interface GeminiResponse {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
+}
+
+async function googleMessage(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: { message?: string } };
+    return body.error?.message ? `: ${body.error.message.slice(0, 200)}` : '';
+  } catch {
+    return '';
+  }
 }
 
 export async function callGemini(cfg: GeminiConfig, ctx: AgentContext, correction?: string) {
@@ -46,8 +56,12 @@ export async function callGemini(cfg: GeminiConfig, ctx: AgentContext, correctio
       }),
     });
     // 429 no plano gratuito = cota do minuto ou do dia esgotada.
-    if (res.status === 429 || res.status >= 500) throw new GeminiUnavailableError(`Gemini respondeu ${res.status}.`);
-    if (!res.ok) throw new Error(`Requisição rejeitada pelo Gemini (${res.status}).`);
+    if (!res.ok) {
+      // O Google explica o motivo no corpo (ex.: "The model is overloaded"); guardamos um trecho para o log e a mensagem.
+      const detail = await googleMessage(res);
+      if (res.status === 429 || res.status >= 500) throw new GeminiUnavailableError(`Gemini respondeu ${res.status}${detail}.`);
+      throw new Error(`Requisição rejeitada pelo Gemini (${res.status}${detail}).`);
+    }
     const body = (await res.json()) as GeminiResponse;
     const text = (body.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('');
     let raw: unknown;

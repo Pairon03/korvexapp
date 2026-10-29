@@ -1,7 +1,7 @@
 // Função da Vercel (Node): recebe o contexto mínimo do agente e chama o Gemini com a chave guardada no servidor.
-// Variáveis: GEMINI_API_KEY (obrigatória) e GEMINI_MODEL (opcional, padrão gemini-3.8-flash).
+// Variáveis: GEMINI_API_KEY (obrigatória), GEMINI_MODEL (opcional, padrão gemini-3.8-flash) e GEMINI_FALLBACK_MODEL (opcional, padrão gemini-3.5-flash-lite).
 // Fase de teste: usar apenas alunos fictícios, porque o plano gratuito do Gemini pode usar o conteúdo para treinar modelos.
-import { callGemini, GEMINI_DEFAULT_MODEL } from '../../../packages/core/src/ai/gemini.js';
+import { callGemini, GEMINI_DEFAULT_MODEL, GEMINI_FALLBACK_MODEL } from '../../../packages/core/src/ai/gemini.js';
 import type { AgentContext } from '../../../packages/core/src/ai/context';
 
 const MAX_BODY = 200_000;
@@ -13,17 +13,22 @@ function json(status: number, body: unknown) {
 // Diagnóstico sem gerar treino: confirma se a chave existe e se o Google aceita a chave e o modelo (não gasta cota de geração).
 export async function GET(): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL;
-  if (!apiKey) return json(200, { configurada: false, modelo: model });
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`, {
-      headers: { 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(10_000),
-    });
-    return json(200, { configurada: true, modelo: model, googleAceitou: res.ok, statusGoogle: res.status });
-  } catch {
-    return json(200, { configurada: true, modelo: model, googleAceitou: false, statusGoogle: null });
-  }
+  const modelo = process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL;
+  const reserva = process.env.GEMINI_FALLBACK_MODEL || GEMINI_FALLBACK_MODEL;
+  if (!apiKey) return json(200, { configurada: false, modelo, reserva });
+  const check = async (model: string) => {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`, {
+        headers: { 'x-goog-api-key': apiKey },
+        signal: AbortSignal.timeout(10_000),
+      });
+      return res.status;
+    } catch {
+      return null;
+    }
+  };
+  const [statusModelo, statusReserva] = await Promise.all([check(modelo), check(reserva)]);
+  return json(200, { configurada: true, modelo, statusModelo, reserva, statusReserva });
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -41,11 +46,20 @@ export async function POST(request: Request): Promise<Response> {
   const ctx = payload.ctx;
   if (!ctx || typeof ctx.agentId !== 'string' || !Array.isArray(ctx.library)) return json(400, { error: 'Contexto do agente ausente.' });
 
-  try {
-    const result = await callGemini({ apiKey, model: process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL }, ctx, typeof payload.correction === 'string' ? payload.correction.slice(0, 500) : undefined);
-    return json(200, result);
-  } catch (err) {
-    const unavailable = (err as { unavailable?: boolean }).unavailable === true;
-    return json(unavailable ? 503 : 502, { error: (err as Error).message, unavailable });
+  const correction = typeof payload.correction === 'string' ? payload.correction.slice(0, 500) : undefined;
+  // Se o modelo principal estiver sobrecarregado (comum no plano gratuito), tenta uma vez o modelo mais leve.
+  const models = [process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL, process.env.GEMINI_FALLBACK_MODEL || GEMINI_FALLBACK_MODEL];
+  let lastErr: unknown;
+  for (const model of models) {
+    try {
+      const result = await callGemini({ apiKey, model }, ctx, correction);
+      return json(200, { ...result, modelo: model });
+    } catch (err) {
+      lastErr = err;
+      console.error(`[ia] ${model}: ${(err as Error).message}`);
+      if ((err as { unavailable?: boolean }).unavailable !== true) break;
+    }
   }
+  const unavailable = (lastErr as { unavailable?: boolean }).unavailable === true;
+  return json(unavailable ? 503 : 502, { error: (lastErr as Error).message, unavailable });
 }
