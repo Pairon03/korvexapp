@@ -9,6 +9,7 @@ import type {
   AgentConfig,
   Assessment,
   LogEntry,
+  PhotoCategory,
   PlanVersion,
   PlatformState,
   Student,
@@ -255,14 +256,47 @@ export function addAssessment(
   return a;
 }
 
-export function setPhotoConsent(state: PlatformState, studentId: string, consent: boolean): void {
+/** Revoga ou concede o consentimento. Na revogação devolve as chaves dos arquivos, que o app apaga do armazenamento. */
+export function setPhotoConsent(state: PlatformState, studentId: string, consent: boolean): string[] {
   const s = getStudent(state, studentId);
   s.photoConsent = consent;
+  const removed: string[] = [];
   if (!consent) {
-    // Revogação: remove as referências às fotos. Em produção, também apaga os arquivos do armazenamento privado.
-    for (const a of state.assessments.filter((x) => x.studentId === studentId)) a.photos = [];
+    for (const a of state.assessments.filter((x) => x.studentId === studentId)) {
+      removed.push(...a.photos.map((p) => p.storageKey));
+      a.photos = [];
+    }
   }
-  audit(state, s.name, consent ? 'concedeu_consentimento_fotos' : 'revogou_consentimento_fotos', `aluno:${s.id}`, '');
+  audit(state, s.name, consent ? 'concedeu_consentimento_fotos' : 'revogou_consentimento_fotos', `aluno:${s.id}`, removed.length ? `${removed.length} foto(s) apagada(s).` : '');
+  return removed;
+}
+
+/** Avaliação que recebe as fotos enviadas agora: a mais recente do aluno. */
+export function photoTargetAssessment(state: PlatformState, studentId: string): Assessment | null {
+  const list = state.assessments.filter((a) => a.studentId === studentId);
+  return list.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id))[0] ?? null;
+}
+
+/** Registra uma foto já enviada. Substitui a da mesma categoria e devolve a chave antiga, para apagar o arquivo. */
+export function addAssessmentPhoto(state: PlatformState, assessmentId: string, category: PhotoCategory, storageKey: string, actor: string): string | null {
+  const a = state.assessments.find((x) => x.id === assessmentId);
+  if (!a) throw new Error('Avaliação não encontrada.');
+  const s = getStudent(state, a.studentId);
+  if (!s.photoConsent) throw new Error('O aluno não autorizou o envio de fotos.');
+  const previous = a.photos.find((p) => p.category === category)?.storageKey ?? null;
+  a.photos = [...a.photos.filter((p) => p.category !== category), { category, storageKey, uploadedAt: state.now }];
+  audit(state, actor, 'enviou_foto', `avaliacao:${a.id}`, `Foto ${category}.`);
+  return previous;
+}
+
+export function removeAssessmentPhoto(state: PlatformState, assessmentId: string, category: PhotoCategory, actor: string): string | null {
+  const a = state.assessments.find((x) => x.id === assessmentId);
+  if (!a) throw new Error('Avaliação não encontrada.');
+  const previous = a.photos.find((p) => p.category === category)?.storageKey ?? null;
+  if (!previous) return null;
+  a.photos = a.photos.filter((p) => p.category !== category);
+  audit(state, actor, 'removeu_foto', `avaliacao:${a.id}`, `Foto ${category}.`);
+  return previous;
 }
 
 // ---------- Agentes ----------

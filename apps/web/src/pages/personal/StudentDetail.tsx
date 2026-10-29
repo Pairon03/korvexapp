@@ -39,6 +39,7 @@ import {
   AssessmentFormSchema,
   formatDose,
   isTimed,
+  type Assessment,
   type CircumferenceKey,
   type PlanVersion,
   type SkinfoldProtocol,
@@ -47,6 +48,8 @@ import {
 } from '@korvex/core';
 import { aiProvider } from '../../state/ai';
 import { useStore } from '../../state/store';
+import { photosEnabled } from '../../state/photos';
+import { PhotoThumb } from '../../components/Photo';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, CardHeader, ConfirmButton, CycleBadge, EmptyState, Field, Input, Modal, Progress, Select, Tabs, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
 import { ChangesList, PlanDays, ValidationList, VolumeChart } from '../../components/PlanView';
@@ -425,6 +428,7 @@ function AssessmentsTab({ student }: { student: Student }) {
   const { state, run } = useStore();
   const list = latestAssessments(state.assessments, student.id);
   const [open, setOpen] = useState(false);
+  const [viewing, setViewing] = useState<Assessment | null>(null);
   const [aId, setAId] = useState(list[1]?.id ?? '');
   const [bId, setBId] = useState(list[0]?.id ?? '');
   const a = list.find((x) => x.id === aId);
@@ -524,6 +528,15 @@ function AssessmentsTab({ student }: { student: Student }) {
                       {x.source === 'aluno' ? 'Informado pelo aluno' : `Coletado por ${x.collectedBy}`} · {x.photos.length ? `${x.photos.length} foto(s)` : 'sem fotos'}
                     </span>
                   </div>
+                  {x.photos.length > 0 && photosEnabled && (
+                    <button type="button" onClick={() => setViewing(x)} className="mt-2 flex gap-1.5" aria-label={`Ver fotos de ${formatDate(x.date)}`}>
+                      {x.photos.map((p) => (
+                        <span key={p.storageKey} className="block h-16 w-12 overflow-hidden rounded-md border border-line">
+                          <PhotoThumb storageKey={p.storageKey} alt={`Foto ${p.category}`} />
+                        </span>
+                      ))}
+                    </button>
+                  )}
                   {x.bodyFat && (
                     <p className="mt-1 text-[12px] text-muted">
                       Gordura estimada <span className="num text-fg">{formatNumber(x.bodyFat.resultPct)}%</span> · {x.bodyFat.formula} ({x.bodyFat.formulaVersion}). {x.bodyFat.limitations}
@@ -535,6 +548,26 @@ function AssessmentsTab({ student }: { student: Student }) {
           </Card>
         </div>
       )}
+      <Modal open={viewing != null} onClose={() => setViewing(null)} title={viewing ? `Fotos de ${formatDate(viewing.date)}` : 'Fotos'} wide>
+        {viewing && (
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-3 gap-2">
+              {(['frente', 'perfil', 'costas'] as const).map((c) => {
+                const p = viewing.photos.find((x) => x.category === c);
+                return (
+                  <figure key={c} className="flex flex-col gap-1">
+                    <div className="aspect-[3/4] overflow-hidden rounded-lg border border-line bg-surface-2">
+                      {p ? <PhotoThumb storageKey={p.storageKey} alt={`Foto ${c} de ${formatDate(viewing.date)}`} className="object-contain" /> : <span className="flex h-full items-center justify-center text-[12px] text-faint">Sem foto</span>}
+                    </div>
+                    <figcaption className="text-center text-[12px] text-muted">{c[0].toUpperCase() + c.slice(1)}</figcaption>
+                  </figure>
+                );
+              })}
+            </div>
+            <p className="text-[12px] text-faint">Enviadas pelo aluno com consentimento. Só você vê; os links expiram em minutos. Se o aluno revogar a autorização, as fotos são apagadas.</p>
+          </div>
+        )}
+      </Modal>
       <AssessmentForm
         open={open}
         onClose={() => setOpen(false)}

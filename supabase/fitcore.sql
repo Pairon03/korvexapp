@@ -57,3 +57,31 @@ drop trigger if exists fitcore_workspaces_touch on public.fitcore_workspaces;
 create trigger fitcore_workspaces_touch
   before insert or update on public.fitcore_workspaces
   for each row execute function public.fitcore_touch();
+
+-- ---------- Fotos de acompanhamento ----------
+-- Bucket privado: nada é público, o app abre cada foto com um link que expira em poucos minutos.
+-- Cada arquivo fica em <id da conta>/<aluno>/<avaliação>/..., e só a própria conta lê, envia ou apaga.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fitcore-fotos', 'fitcore-fotos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+  set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "fitcore fotos dono le" on storage.objects;
+drop policy if exists "fitcore fotos dono envia" on storage.objects;
+drop policy if exists "fitcore fotos dono altera" on storage.objects;
+drop policy if exists "fitcore fotos dono apaga" on storage.objects;
+
+create policy "fitcore fotos dono le" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'fitcore-fotos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "fitcore fotos dono envia" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'fitcore-fotos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "fitcore fotos dono altera" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'fitcore-fotos' and (storage.foldername(name))[1] = (select auth.uid())::text)
+  with check (bucket_id = 'fitcore-fotos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "fitcore fotos dono apaga" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'fitcore-fotos' and (storage.foldername(name))[1] = (select auth.uid())::text);
