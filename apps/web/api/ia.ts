@@ -10,6 +10,22 @@ function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
 
+// Diagnóstico sem gerar treino: confirma se a chave existe e se o Google aceita a chave e o modelo (não gasta cota de geração).
+export async function GET(): Promise<Response> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL;
+  if (!apiKey) return json(200, { configurada: false, modelo: model });
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`, {
+      headers: { 'x-goog-api-key': apiKey },
+      signal: AbortSignal.timeout(10_000),
+    });
+    return json(200, { configurada: true, modelo: model, googleAceitou: res.ok, statusGoogle: res.status });
+  } catch {
+    return json(200, { configurada: true, modelo: model, googleAceitou: false, statusGoogle: null });
+  }
+}
+
 export async function POST(request: Request): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return json(503, { error: 'A chave do Gemini ainda não foi configurada na Vercel (GEMINI_API_KEY).', unavailable: true });
