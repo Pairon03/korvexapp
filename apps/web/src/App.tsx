@@ -18,7 +18,10 @@ import Admin from './pages/admin/Admin';
 
 function Shell() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  // Navegadores novos fazem scrollTo devolver uma Promise; o efeito não pode retorná-la (React trataria como limpeza).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return (
     <>
       <DemoBar />
