@@ -49,7 +49,7 @@ import {
 import { aiProvider } from '../../state/ai';
 import { useStore } from '../../state/store';
 import { photosEnabled } from '../../state/photos';
-import { PhotoThumb } from '../../components/Photo';
+import { PhotoThumb, PhotoViewer, sortPhotos } from '../../components/Photo';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, CardHeader, ConfirmButton, CycleBadge, EmptyState, Field, Input, Modal, Progress, Select, Tabs, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
 import { ChangesList, PlanDays, ValidationList, VolumeChart } from '../../components/PlanView';
@@ -425,10 +425,15 @@ function VersionsTab({ student }: { student: Student }) {
 const CIRC_KEYS = Object.keys(circumferenceLabel) as CircumferenceKey[];
 
 function AssessmentsTab({ student }: { student: Student }) {
-  const { state, run } = useStore();
+  const { state, run, cloud } = useStore();
   const list = latestAssessments(state.assessments, student.id);
   const [open, setOpen] = useState(false);
-  const [viewing, setViewing] = useState<Assessment | null>(null);
+  const [viewing, setViewing] = useState<{ assessment: Assessment; index: number; watermark: string } | null>(null);
+  // Cada abertura fica no registro de auditoria, que o aluno pode pedir junto com os dados dele.
+  const openPhotos = (x: Assessment, index: number) => {
+    setViewing({ assessment: x, index, watermark: `${cloud.email ?? state.trainer.name} · ${student.name} · ${new Date().toLocaleString('pt-BR')}` });
+    void run((d) => audit(d, state.trainer.name, 'visualizou_fotos', `avaliacao:${x.id}`, `Fotos de ${student.name} (${x.photos.length}).`));
+  };
   const [aId, setAId] = useState(list[1]?.id ?? '');
   const [bId, setBId] = useState(list[0]?.id ?? '');
   const a = list.find((x) => x.id === aId);
@@ -529,13 +534,19 @@ function AssessmentsTab({ student }: { student: Student }) {
                     </span>
                   </div>
                   {x.photos.length > 0 && photosEnabled && (
-                    <button type="button" onClick={() => setViewing(x)} className="mt-2 flex gap-1.5" aria-label={`Ver fotos de ${formatDate(x.date)}`}>
-                      {x.photos.map((p) => (
-                        <span key={p.storageKey} className="block h-16 w-12 overflow-hidden rounded-md border border-line">
+                    <div className="mt-2 flex gap-1.5">
+                      {sortPhotos(x.photos).map((p, i) => (
+                        <button
+                          key={p.storageKey}
+                          type="button"
+                          onClick={() => openPhotos(x, i)}
+                          className="block h-16 w-12 overflow-hidden rounded-md border border-line hover:border-accent/60"
+                          aria-label={`Ver foto ${p.category} de ${formatDate(x.date)}`}
+                        >
                           <PhotoThumb storageKey={p.storageKey} alt={`Foto ${p.category}`} />
-                        </span>
+                        </button>
                       ))}
-                    </button>
+                    </div>
                   )}
                   {x.bodyFat && (
                     <p className="mt-1 text-[12px] text-muted">
@@ -548,23 +559,18 @@ function AssessmentsTab({ student }: { student: Student }) {
           </Card>
         </div>
       )}
-      <Modal open={viewing != null} onClose={() => setViewing(null)} title={viewing ? `Fotos de ${formatDate(viewing.date)}` : 'Fotos'} wide>
+      <Modal open={viewing != null} onClose={() => setViewing(null)} title={viewing ? `Fotos de ${formatDate(viewing.assessment.date)}` : 'Fotos'} wide>
         {viewing && (
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-3 gap-2">
-              {(['frente', 'perfil', 'costas'] as const).map((c) => {
-                const p = viewing.photos.find((x) => x.category === c);
-                return (
-                  <figure key={c} className="flex flex-col gap-1">
-                    <div className="aspect-[3/4] overflow-hidden rounded-lg border border-line bg-surface-2">
-                      {p ? <PhotoThumb storageKey={p.storageKey} alt={`Foto ${c} de ${formatDate(viewing.date)}`} className="object-contain" /> : <span className="flex h-full items-center justify-center text-[12px] text-faint">Sem foto</span>}
-                    </div>
-                    <figcaption className="text-center text-[12px] text-muted">{c[0].toUpperCase() + c.slice(1)}</figcaption>
-                  </figure>
-                );
-              })}
-            </div>
-            <p className="text-[12px] text-faint">Enviadas pelo aluno com consentimento. Só você vê; os links expiram em minutos. Se o aluno revogar a autorização, as fotos são apagadas.</p>
+            <PhotoViewer
+              photos={sortPhotos(viewing.assessment.photos).map((p) => ({ storageKey: p.storageKey, label: p.category[0].toUpperCase() + p.category.slice(1) }))}
+              start={viewing.index}
+              watermark={viewing.watermark}
+            />
+            <p className="text-[12px] text-faint">
+              Enviadas pelo aluno com consentimento, só para acompanhamento. Não salve nem compartilhe: cada abertura fica registrada e a marca d'água identifica quem viu. Se o aluno revogar a
+              autorização, as fotos são apagadas.
+            </p>
           </div>
         )}
       </Modal>

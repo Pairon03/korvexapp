@@ -19,6 +19,7 @@ import {
   photoTargetAssessment,
   removeAssessmentPhoto,
   setPhotoConsent,
+  type Assessment,
   type PhotoCategory,
   formatDose,
   isTimed,
@@ -31,7 +32,7 @@ import {
 } from '@korvex/core';
 import { useStore } from '../../state/store';
 import { deletePhotos, photosEnabled, prepareImage, uploadPhoto } from '../../state/photos';
-import { PhotoThumb } from '../../components/Photo';
+import { PhotoThumb, PhotoViewer, sortPhotos } from '../../components/Photo';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, EmptyState, Field, Input, Modal, Progress, Select, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
 import { AssessmentForm } from '../personal/StudentDetail';
@@ -496,7 +497,10 @@ function PhotoSection() {
   const student = useStudent()!;
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<PhotoCategory | null>(null);
+  const [viewing, setViewing] = useState<{ assessment: Assessment; index: number } | null>(null);
   const target = photoTargetAssessment(state, student.id);
+  // Avaliações anteriores que já têm fotos: o aluno continua vendo e pode apagar.
+  const earlier = photosEnabled ? latestAssessments(state.assessments, student.id).filter((a) => a.id !== target?.id && a.photos.length > 0) : [];
 
   const changeConsent = async (v: boolean) => {
     const removed = await run((d) => setPhotoConsent(d, student.id, v), v ? 'Consentimento registrado.' : 'Consentimento revogado. Fotos removidas.');
@@ -522,8 +526,8 @@ function PhotoSection() {
     }
   };
 
-  const remove = async (category: PhotoCategory) => {
-    const previous = await run((d) => removeAssessmentPhoto(d, target!.id, category, student.name), 'Foto removida.');
+  const remove = async (assessmentId: string, category: PhotoCategory) => {
+    const previous = await run((d) => removeAssessmentPhoto(d, assessmentId, category, student.name), 'Foto removida.');
     if (previous) await deletePhotos([previous]);
   };
 
@@ -590,7 +594,7 @@ function PhotoSection() {
                       {saved && busy !== c && (
                         <button
                           type="button"
-                          onClick={() => void remove(c)}
+                          onClick={() => void remove(target!.id, c)}
                           className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white hover:bg-black/80"
                           aria-label={`Remover foto de ${c}`}
                         >
@@ -603,6 +607,38 @@ function PhotoSection() {
               </div>
             </>
           )}
+          {earlier.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <p className="text-[13px] font-semibold">Fotos que você já enviou</p>
+              {earlier.map((a) => (
+                <div key={a.id} className="flex flex-col gap-1.5">
+                  <p className="text-[12px] text-faint">Avaliação de {formatDate(a.date)}</p>
+                  <div className="flex gap-2">
+                    {sortPhotos(a.photos).map((p, i) => (
+                      <div key={p.storageKey} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setViewing({ assessment: a, index: i })}
+                          className="block h-24 w-[72px] overflow-hidden rounded-lg border border-line"
+                          aria-label={`Ver foto ${p.category} de ${formatDate(a.date)}`}
+                        >
+                          <PhotoThumb storageKey={p.storageKey} alt={`Foto ${p.category}`} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void remove(a.id, p.category)}
+                          className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white hover:bg-black/80"
+                          aria-label={`Apagar foto ${p.category} de ${formatDate(a.date)}`}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <Callout tone="neutral" icon={<Lock size={16} />}>
             {photosEnabled
               ? 'Só você e seu personal veem as fotos. Elas ficam em armazenamento privado, abrem por links que expiram em minutos e são apagadas se você revogar a autorização.'
@@ -610,6 +646,9 @@ function PhotoSection() {
           </Callout>
         </>
       )}
+      <Modal open={viewing != null} onClose={() => setViewing(null)} title={viewing ? `Suas fotos de ${formatDate(viewing.assessment.date)}` : 'Suas fotos'} wide>
+        {viewing && <PhotoViewer photos={sortPhotos(viewing.assessment.photos).map((p) => ({ storageKey: p.storageKey, label: categoryLabel(p.category) }))} start={viewing.index} />}
+      </Modal>
     </Card>
   );
 }
