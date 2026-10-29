@@ -50,9 +50,10 @@ export async function POST(request: Request): Promise<Response> {
   // Se o modelo principal estiver sobrecarregado (comum no plano gratuito), tenta uma vez o modelo mais leve.
   const models = [process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL, process.env.GEMINI_FALLBACK_MODEL || GEMINI_FALLBACK_MODEL];
   let lastErr: unknown;
-  for (const model of models) {
+  for (const [i, model] of models.entries()) {
     try {
-      const result = await callGemini({ apiKey, model }, ctx, correction);
+      // O Flash pensa antes de responder e às vezes passa de 1 minuto; limitamos o principal para a reserva entrar antes.
+      const result = await callGemini({ apiKey, model, timeoutMs: i === 0 ? 30_000 : 50_000 }, ctx, correction);
       return json(200, { ...result, modelo: model });
     } catch (err) {
       lastErr = err;
