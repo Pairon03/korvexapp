@@ -50,7 +50,7 @@ do volume total ≤ limite do agente · cardio dentro dos limites.
 
 ## Roteiro para produção
 
-1. **Backend**: Next.js (App Router) ou API dedicada + Supabase (Postgres, Auth, Storage privado).
+1. **Backend**: Supabase (Postgres, Auth, Storage privado). Etapa 1 pronta: login do personal e estado salvo por conta (`docs/SUPABASE.md`).
    Migrações para as entidades de `types.ts` (users, tenants, tenant_members, students,
    student_consents, ai_agents/_versions, exercises, workout_plans/_versions, workout_days,
    workout_exercises, workout_logs/_sets, assessments, progress_photos, training_cycles, ai_runs,
@@ -67,8 +67,8 @@ do volume total ≤ limite do agente · cardio dentro dos limites.
 
 ## Limitações conhecidas
 
-- Sem autenticação, multi-tenant real, RLS, e-mail, pagamento ou upload de fotos.
-- Dados só no navegador; limpar o armazenamento reinicia a demonstração.
+- Login só para o personal (Supabase, etapa 1); o aluno ainda não tem login. Sem e-mail transacional, pagamento ou upload de fotos.
+- Sem Supabase configurado, os dados ficam só no navegador; limpar o armazenamento reinicia a demonstração.
 - Biblioteca de exercícios inicial (38 itens) sem mídia; precisa de revisão profissional.
 - Regras de segurança e progressão são parâmetros iniciais e devem ser revisadas por profissionais
   qualificados antes do lançamento. Textos legais são rascunhos.

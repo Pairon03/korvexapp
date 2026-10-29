@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { CalendarClock, ChevronDown, FlaskConical, Play, RotateCcw, Sun, Moon, SlidersHorizontal } from 'lucide-react';
+import { CalendarClock, ChevronDown, FlaskConical, LogOut, Play, RotateCcw, Sun, Moon, SlidersHorizontal } from 'lucide-react';
 import { advanceClock, cycleStateLabel, formatDate, runScheduler, type CycleReport } from '@korvex/core';
 import { useStore } from '../state/store';
 import { aiProvider, geminiAvailable, getAiSource, setAiSource, type AiSource } from '../state/ai';
@@ -29,7 +29,7 @@ function useTheme() {
 }
 
 export function DemoBar() {
-  const { state, run, reset } = useStore();
+  const { state, run, reset, cloud } = useStore();
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<CycleReport[] | null>(null);
   const [running, setRunning] = useState(false);
@@ -87,6 +87,16 @@ export function DemoBar() {
       <Button size="sm" variant="ghost" className="h-7" onClick={() => setConfirmReset(true)}>
         <RotateCcw size={13} aria-hidden /> Reiniciar
       </Button>
+      {cloud.email && (
+        <div className="flex items-center gap-1.5">
+          <span className="max-w-48 truncate text-[12px] text-muted" title={cloud.email}>
+            {cloud.email}
+          </span>
+          <Button size="sm" variant="ghost" className="h-7" onClick={() => void cloud.signOut().then(() => navigate('/entrar'))}>
+            <LogOut size={13} aria-hidden /> Sair
+          </Button>
+        </div>
+      )}
     </>
   );
 
@@ -171,7 +181,11 @@ export function DemoBar() {
       </Modal>
 
       <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title="Reiniciar a demonstração?">
-        <p className="text-sm text-muted">Tudo o que você fez nesta demonstração será apagado deste navegador e os dados fictícios originais voltam.</p>
+        <p className="text-sm text-muted">
+          {cloud.email
+            ? `Todos os alunos, treinos e registros da conta ${cloud.email} serão apagados da nuvem e os dados fictícios originais voltam. Não dá para desfazer.`
+            : 'Tudo o que você fez nesta demonstração será apagado deste navegador e os dados fictícios originais voltam.'}
+        </p>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmReset(false)}>
             Voltar

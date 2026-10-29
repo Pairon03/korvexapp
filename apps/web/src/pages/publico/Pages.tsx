@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Briefcase, Smartphone, Shield } from 'lucide-react';
 import { Logo } from '../../components/Layouts';
 import { Button, Callout, EmptyState, LinkButton } from '../../components/ui';
+import { cloudEnabled } from '../../state/cloud';
+import { CloudLogin } from './Auth';
 
 function LegalShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -53,6 +55,7 @@ export function Privacy() {
 }
 
 export function Login() {
+  if (cloudEnabled) return <CloudLogin />;
   return (
     <div className="gutter mx-auto flex max-w-md flex-col gap-6 py-14">
       <Link to="/">
