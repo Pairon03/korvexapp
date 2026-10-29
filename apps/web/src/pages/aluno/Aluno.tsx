@@ -40,7 +40,7 @@ export function AlunoHome() {
   if (student.status === 'convidado')
     return (
       <EmptyState title="Convite pendente" action={<Button variant="primary" onClick={() => run((d) => void (d.students.find((s) => s.id === student.id)!.status = 'ativo'), 'Convite aceito.')}>Aceitar convite</Button>}>
-        {state.trainer.name} convidou você para acompanhar seus treinos pela Korvex. Ao aceitar, você vê apenas os seus próprios dados.
+        {state.trainer.name} convidou você para acompanhar seus treinos pelo FitCore. Ao aceitar, você vê apenas os seus próprios dados.
       </EmptyState>
     );
   const plan = getPublished(state, student.id);

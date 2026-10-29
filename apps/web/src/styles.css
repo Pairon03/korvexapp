@@ -3,7 +3,7 @@
 /* Layout: painel com navegação lateral no desktop e barra inferior no celular; app do aluno em coluna única. */
 /* Tema escuro é o padrão. O tema claro só entra por escolha explícita (data-theme="light"). */
 :root {
-  /* Paleta da marca Korvex (cvkorvex.vercel.app): grafite quase preto, vermelho-rosa como destaque,
+  /* Paleta da marca Korvex (vmkorvex.vercel.app): grafite quase preto, vermelho-rosa como destaque,
      magenta e roxo como apoio. Semânticas separadas do destaque para não confundir "marca" com "erro". */
   --bg: #07070a;
   --surface: #0e0e13;

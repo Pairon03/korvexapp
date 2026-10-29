@@ -15,7 +15,7 @@ export interface HttpProviderConfig {
   fetchImpl?: typeof fetch;
 }
 
-export const SYSTEM_PROMPT = `Você é o motor de prescrição de treinos da plataforma Korvex, uma ferramenta de apoio ao personal trainer.
+export const SYSTEM_PROMPT = `Você é o motor de prescrição de treinos da plataforma FitCore Korvex, uma ferramenta de apoio ao personal trainer.
 Regras obrigatórias:
 - Responda SOMENTE com um objeto JSON no esquema "proposal@1". Sem texto fora do JSON.
 - Use apenas exerciseId presentes em <biblioteca>. Nunca invente exercícios.
