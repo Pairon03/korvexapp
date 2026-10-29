@@ -49,7 +49,7 @@ export default function Landing() {
 
       <section className="gutter mx-auto grid max-w-6xl items-center gap-10 pt-8 pb-16 lg:grid-cols-[1.05fr_1fr] lg:pt-14">
         <div className="min-w-0">
-          <p className="eyebrow mb-4">Para personal trainers · ciclos de 45 dias</p>
+          <p className="eyebrow mb-4">Você orienta. A tecnologia acompanha.</p>
           <h1 className="display-wide text-[27px] leading-[1.15] sm:text-[38px] lg:text-[44px]">
             O treino se atualiza sozinho. <span className="brand-gradient">As regras são suas.</span>
           </h1>
@@ -258,6 +258,7 @@ export default function Landing() {
               ['O que acontece se o aluno relatar dor?', 'Relatos acima do limite que você definiu suspendem a publicação automática. O treino atual continua e você recebe um aviso para revisar.'],
               ['O aluno precisa enviar fotos?', 'Não. Fotos são opcionais, exigem consentimento específico e não são usadas para gerar treinos.'],
               ['E se a IA estiver fora do ar?', 'O treino vigente continua. O sistema tenta de novo com intervalos crescentes e, se não conseguir, avisa você.'],
+              ['O treino sempre muda depois de 45 dias?', 'Não. O prazo só inicia uma verificação. Avaliação faltando, relato de dor ou falta de autorização seguram a publicação, e o treino atual continua valendo.'],
               ['Posso mudar o intervalo de 45 dias?', 'Sim, por agente. Estender o prazo de um aluno específico também é possível, sempre com motivo registrado.'],
               ['Como funciona o pagamento?', 'Assinatura mensal recorrente pelo Mercado Pago, com checkout hospedado. O plano só muda após a confirmação do provedor.'],
             ].map(([q, a]) => (
@@ -294,7 +295,7 @@ export default function Landing() {
             <Link to="/privacidade" className="hover:text-fg">Privacidade</Link>
             <a href="#perguntas" className="hover:text-fg">Suporte</a>
           </nav>
-          <p>© {new Date(state.now).getFullYear()} Korvex. Protótipo.</p>
+          <p>© {new Date(state.now).getFullYear()} FitCore, um produto Korvex. Protótipo.</p>
         </div>
       </footer>
     </div>

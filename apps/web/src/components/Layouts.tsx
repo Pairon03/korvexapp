@@ -20,10 +20,13 @@ import { useStore } from '../state/store';
 import { Select, cx } from './ui';
 
 export function Logo({ className }: { className?: string }) {
-  // Logotipo da marca: KORVEX em Michroma, com o "E" espelhado.
+  // Logotipo: FITCORE em Michroma, assinado por KORVEX (com o "E" espelhado, como no site da Korvex).
   return (
-    <span className={cx('text-[15px] tracking-[0.16em] whitespace-nowrap text-fg', className)} style={{ fontFamily: 'var(--font-display)' }} aria-label="Korvex">
-      KORV<span className="inline-block -scale-x-100">E</span>X
+    <span className={cx('inline-flex items-baseline gap-2 whitespace-nowrap', className)} style={{ fontFamily: 'var(--font-display)' }} aria-label="FitCore Korvex">
+      <span className="text-[15px] tracking-[0.16em] text-fg">FITCORE</span>
+      <span className="text-[9px] tracking-[0.22em] text-accent" aria-hidden>
+        KORV<span className="inline-block -scale-x-100">E</span>X
+      </span>
     </span>
   );
 }

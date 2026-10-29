@@ -2,7 +2,7 @@
   "name": "korvexapp",
   "private": true,
   "version": "0.1.0",
-  "description": "Korvex — plataforma de treinamento personalizado com IA para personal trainers (protótipo)",
+  "description": "FitCore Korvex — plataforma de treinamento personalizado com IA para personal trainers (protótipo)",
   "workspaces": [
     "packages/*",
     "apps/*"

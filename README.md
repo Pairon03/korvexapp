@@ -1,4 +1,4 @@
-# Korvex
+# FitCore Korvex
 
 Plataforma de treinamento personalizado com IA para personal trainers (modelo B2B2C).
 O personal configura um **agente de IA** com a própria metodologia; a cada **ciclo de 45 dias** o

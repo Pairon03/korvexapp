@@ -24,7 +24,7 @@ export function Terms() {
   return (
     <LegalShell title="Termos de uso">
       <h2>1. O serviço</h2>
-      <p>A Korvex oferece a personal trainers e studios uma plataforma para prescrever, acompanhar e atualizar programas de treinamento com apoio de inteligência artificial.</p>
+      <p>O FitCore Korvex oferece a personal trainers e studios uma plataforma para prescrever, acompanhar e atualizar programas de treinamento com apoio de inteligência artificial.</p>
       <h2>2. Responsabilidade profissional</h2>
       <p>As propostas geradas são ferramentas de apoio. A prescrição e o acompanhamento são de responsabilidade do profissional habilitado que utiliza a plataforma.</p>
       <h2>3. Assinatura</h2>
