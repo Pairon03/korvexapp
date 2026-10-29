@@ -15,7 +15,11 @@ import {
   notify,
   regionLabel,
   resumeWorkout,
+  addAssessmentPhoto,
+  photoTargetAssessment,
+  removeAssessmentPhoto,
   setPhotoConsent,
+  type PhotoCategory,
   formatDose,
   isTimed,
   startWorkout,
@@ -26,6 +30,8 @@ import {
   type LoggedSet,
 } from '@korvex/core';
 import { useStore } from '../../state/store';
+import { deletePhotos, photosEnabled, prepareImage, uploadPhoto } from '../../state/photos';
+import { PhotoThumb } from '../../components/Photo';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, EmptyState, Field, Input, Modal, Progress, Select, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
 import { AssessmentForm } from '../personal/StudentDetail';
@@ -482,10 +488,45 @@ export function AlunoAssessment() {
   );
 }
 
+const PHOTO_CATEGORIES = ['frente', 'perfil', 'costas'] as const;
+const categoryLabel = (c: PhotoCategory) => c[0].toUpperCase() + c.slice(1);
+
 function PhotoSection() {
-  const { run } = useStore();
+  const { state, run, toast } = useStore();
   const student = useStudent()!;
   const [previews, setPreviews] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<PhotoCategory | null>(null);
+  const target = photoTargetAssessment(state, student.id);
+
+  const changeConsent = async (v: boolean) => {
+    const removed = await run((d) => setPhotoConsent(d, student.id, v), v ? 'Consentimento registrado.' : 'Consentimento revogado. Fotos removidas.');
+    if (removed?.length && !(await deletePhotos(removed))) toast('erro', 'Algumas fotos não foram apagadas do armazenamento. Tente revogar de novo.');
+  };
+
+  const send = async (category: PhotoCategory, file: File) => {
+    if (!target) return;
+    if (file.size > 15 * 1024 * 1024) return toast('erro', 'Foto grande demais. Use uma de até 15 MB.');
+    setBusy(category);
+    let key: string | null = null;
+    try {
+      key = await uploadPhoto(student.id, target.id, category, await prepareImage(file));
+      const uploaded = key;
+      const previous = await run((d) => addAssessmentPhoto(d, target.id, category, uploaded, student.name), 'Foto enviada ao seu personal.');
+      if (previous === undefined) await deletePhotos([key]);
+      else await deletePhotos([previous]);
+    } catch (err) {
+      if (key) await deletePhotos([key]);
+      toast('erro', (err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const remove = async (category: PhotoCategory) => {
+    const previous = await run((d) => removeAssessmentPhoto(d, target!.id, category, student.name), 'Foto removida.');
+    if (previous) await deletePhotos([previous]);
+  };
+
   return (
     <Card className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -497,7 +538,7 @@ function PhotoSection() {
       </p>
       <Toggle
         checked={student.photoConsent}
-        onChange={(v) => run((d) => setPhotoConsent(d, student.id, v), v ? 'Consentimento registrado.' : 'Consentimento revogado. Fotos removidas.')}
+        onChange={(v) => void changeConsent(v)}
         label="Autorizo o envio de fotos ao meu personal"
         description="Finalidade: acompanhamento visual. Armazenamento privado, acesso registrado. Você pode revogar a qualquer momento."
       />
@@ -508,26 +549,64 @@ function PhotoSection() {
             <li>Roupa de treino. Não é necessário expor mais do que isso.</li>
             <li>Câmera na altura do peito, corpo inteiro no quadro.</li>
           </ul>
-          <div className="grid grid-cols-3 gap-2">
-            {(['frente', 'perfil', 'costas'] as const).map((c) => (
-              <label key={c} className="flex aspect-[3/4] max-w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-dashed border-line bg-surface-2 text-[12px] text-muted">
-                {previews[c] ? <img src={previews[c]} alt={`Prévia ${c}`} className="h-full w-full object-cover" /> : <><Camera size={18} /> {c[0].toUpperCase() + c.slice(1)}</>}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    if (f.size > 8 * 1024 * 1024) return;
-                    setPreviews((p) => ({ ...p, [c]: URL.createObjectURL(f) }));
-                  }}
-                />
-              </label>
-            ))}
-          </div>
+          {photosEnabled && !target ? (
+            <Callout tone="info">Registre suas medidas primeiro. As fotos ficam junto da avaliação mais recente.</Callout>
+          ) : (
+            <>
+              {photosEnabled && target && <p className="text-[12px] text-faint">As fotos vão junto da avaliação de {formatDate(target.date)}.</p>}
+              <div className="grid grid-cols-3 gap-2">
+                {PHOTO_CATEGORIES.map((c) => {
+                  const saved = photosEnabled ? target?.photos.find((p) => p.category === c) : undefined;
+                  return (
+                    <div key={c} className="relative">
+                      <label className="flex aspect-[3/4] max-w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-dashed border-line bg-surface-2 text-[12px] text-muted">
+                        {busy === c ? (
+                          <span className="size-5 animate-spin rounded-full border-2 border-accent border-t-transparent" role="status" aria-label="Enviando foto" />
+                        ) : saved ? (
+                          <PhotoThumb storageKey={saved.storageKey} alt={`Foto ${c}`} />
+                        ) : previews[c] ? (
+                          <img src={previews[c]} alt={`Prévia ${c}`} className="h-full w-full object-cover" />
+                        ) : (
+                          <>
+                            <Camera size={18} /> {categoryLabel(c)}
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="sr-only"
+                          aria-label={`${saved ? 'Trocar' : 'Enviar'} foto de ${c}`}
+                          disabled={busy != null}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!f) return;
+                            if (photosEnabled) return void send(c, f);
+                            if (f.size > 8 * 1024 * 1024) return;
+                            setPreviews((p) => ({ ...p, [c]: URL.createObjectURL(f) }));
+                          }}
+                        />
+                      </label>
+                      {saved && busy !== c && (
+                        <button
+                          type="button"
+                          onClick={() => void remove(c)}
+                          className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white hover:bg-black/80"
+                          aria-label={`Remover foto de ${c}`}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
           <Callout tone="neutral" icon={<Lock size={16} />}>
-            No protótipo a foto aparece só nesta tela e não é enviada nem salva. O envio real depende do armazenamento privado (Supabase Storage) com links temporários.
+            {photosEnabled
+              ? 'Só você e seu personal veem as fotos. Elas ficam em armazenamento privado, abrem por links que expiram em minutos e são apagadas se você revogar a autorização.'
+              : 'No protótipo a foto aparece só nesta tela e não é enviada nem salva.'}
           </Callout>
         </>
       )}
@@ -556,7 +635,10 @@ export function AlunoProfile() {
         </h2>
         <Toggle
           checked={student.photoConsent}
-          onChange={(v) => run((d) => setPhotoConsent(d, student.id, v), v ? 'Consentimento registrado.' : 'Consentimento revogado.')}
+          onChange={async (v) => {
+            const removed = await run((d) => setPhotoConsent(d, student.id, v), v ? 'Consentimento registrado.' : 'Consentimento revogado. Fotos removidas.');
+            if (removed?.length) await deletePhotos(removed);
+          }}
           label="Fotos de acompanhamento"
           description="Opcional. Revogar remove as fotos."
         />

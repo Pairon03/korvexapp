@@ -5,6 +5,8 @@ O que esta etapa faz:
 - Login do personal (criar conta, entrar, esqueci a senha) pelo Supabase Auth.
 - Os dados de cada conta (alunos, treinos, ciclos, registros, avaliações) ficam salvos no Supabase,
   na tabela `fitcore_workspaces`, e só a própria conta acessa (RLS).
+- Fotos de acompanhamento (frente, perfil, costas) no bucket privado `fitcore-fotos`. Só a própria conta vê,
+  por links que expiram em 10 minutos. Se o aluno revogar o consentimento, os arquivos são apagados.
 - A função `/api/ia` passa a exigir login, para a cota do Gemini não ficar aberta.
 - Sem as variáveis do Supabase, o app continua funcionando só no navegador, como antes.
 
@@ -24,9 +26,13 @@ O que esta etapa faz:
 
 A chave anon é pública por definição. Nunca coloque a chave `service_role` / secret no site.
 
+Atualizou o app e ele ganhou fotos? Rode o `supabase/fitcore.sql` de novo no SQL Editor: ele cria o bucket
+`fitcore-fotos` e as regras de acesso, sem apagar nada do que já existe.
+
 ## Limites desta etapa
 
 - O "Ver como aluno" ainda é uma simulação dentro da conta do personal; o aluno não tem login próprio.
+- As fotos ficam no plano grátis do Supabase (1 GB de armazenamento); cada foto é reduzida para no máximo 1600 px.
 - O agendador ainda roda quando o personal abre o app ou clica em "Executar agendador".
 - Plano grátis do Supabase: até 500 MB de banco e pausa após 1 semana sem uso.
 
