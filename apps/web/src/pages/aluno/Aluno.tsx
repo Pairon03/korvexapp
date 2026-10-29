@@ -185,7 +185,7 @@ function RestTimer({ seconds, onClose }: { seconds: number; onClose: () => void 
 
 export function Session() {
   const { logId = '' } = useParams();
-  const { state, run, saved } = useStore();
+  const { state, run, saved, saveFailed } = useStore();
   const navigate = useNavigate();
   const log = state.logs.find((l) => l.id === logId);
   const [rest, setRest] = useState<number | null>(null);
@@ -211,9 +211,9 @@ export function Session() {
           <p className="eyebrow">{formatDate(log.date)}</p>
           <h1 className="display-narrow text-[21px] sm:text-[24px]">{day?.label ?? 'Treino'}</h1>
         </div>
-        <span className={cx('flex items-center gap-1 text-[12px]', saved ? 'text-ok' : 'text-warn')} aria-live="polite">
-          {saved ? <Check size={14} /> : <TriangleAlert size={14} />}
-          {saved ? 'Registros salvos' : 'Não foi possível salvar'}
+        <span className={cx('flex items-center gap-1 text-[12px]', saved ? 'text-ok' : saveFailed ? 'text-warn' : 'text-muted')} aria-live="polite">
+          {saved ? <Check size={14} /> : saveFailed ? <TriangleAlert size={14} /> : null}
+          {saved ? 'Registros salvos' : saveFailed ? 'Não foi possível salvar' : 'Salvando…'}
         </span>
       </div>
       <Progress value={doneSets} max={totalSets} label="Séries registradas" />

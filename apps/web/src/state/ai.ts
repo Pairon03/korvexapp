@@ -1,4 +1,5 @@
 import { RemoteProvider, type AiProvider } from '@korvex/core';
+import { authedFetch } from './cloud';
 
 // Escolha da IA na demonstração: o gerador local (padrão) ou o Gemini real pela função /api/ia.
 // O Gemini só existe no site publicado na Vercel; o HTML único do protótipo não tem servidor.
@@ -25,5 +26,5 @@ export function setAiSource(source: AiSource) {
 
 /** Provedor para passar ao motor; undefined usa o gerador local. */
 export function aiProvider(): AiProvider | undefined {
-  return getAiSource() === 'gemini' ? new RemoteProvider('/api/ia', { name: 'gemini', model: 'gemini (servidor)' }) : undefined;
+  return getAiSource() === 'gemini' ? new RemoteProvider('/api/ia', { name: 'gemini', model: 'gemini (servidor)', fetchImpl: authedFetch }) : undefined;
 }

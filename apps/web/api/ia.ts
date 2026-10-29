@@ -6,6 +6,25 @@ import type { AgentContext } from '../../../packages/core/src/ai/context';
 
 const MAX_BODY = 200_000;
 
+// Com o Supabase configurado (as mesmas variáveis VITE_ do site), só quem está logado gera treino.
+// Assim a cota do Gemini não fica aberta para qualquer visitante.
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+
+async function loggedIn(request: Request): Promise<boolean> {
+  const token = request.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
+  if (!token || !SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_ANON_KEY, authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5_000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
 }
@@ -15,7 +34,8 @@ export async function GET(): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
   const modelo = process.env.GEMINI_MODEL || GEMINI_DEFAULT_MODEL;
   const reserva = process.env.GEMINI_FALLBACK_MODEL || GEMINI_FALLBACK_MODEL;
-  if (!apiKey) return json(200, { configurada: false, modelo, reserva });
+  const exigeLogin = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  if (!apiKey) return json(200, { configurada: false, modelo, reserva, exigeLogin });
   const check = async (model: string) => {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`, {
@@ -28,12 +48,13 @@ export async function GET(): Promise<Response> {
     }
   };
   const [statusModelo, statusReserva] = await Promise.all([check(modelo), check(reserva)]);
-  return json(200, { configurada: true, modelo, statusModelo, reserva, statusReserva });
+  return json(200, { configurada: true, modelo, statusModelo, reserva, statusReserva, exigeLogin });
 }
 
 export async function POST(request: Request): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return json(503, { error: 'A chave do Gemini ainda não foi configurada na Vercel (GEMINI_API_KEY).', unavailable: true });
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && !(await loggedIn(request))) return json(401, { error: 'Entre na sua conta para gerar treinos com a IA.' });
 
   const text = await request.text();
   if (text.length > MAX_BODY) return json(413, { error: 'Contexto grande demais.' });
