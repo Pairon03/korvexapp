@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Bell, Camera, Check, ChevronRight, Clock, Copy, Lock, Minus, Plus, ShieldCheck, Timer, TriangleAlert, X } from 'lucide-react';
+import { Bell, Camera, Check, ChevronRight, Clock, Copy, Lock, Minus, Play, Plus, ShieldCheck, Timer, TriangleAlert, X } from 'lucide-react';
 import {
   activeCycle,
   addAssessment,
@@ -19,6 +19,7 @@ import {
   startWorkout,
   updateLogEntry,
   type BodyRegion,
+  type Exercise,
   type LogEntry,
   type LoggedSet,
 } from '@korvex/core';
@@ -26,6 +27,7 @@ import { useStore } from '../../state/store';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, EmptyState, Field, Input, Modal, Progress, Select, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
 import { AssessmentForm } from '../personal/StudentDetail';
+import { ExerciseDemo, hasDemo, safeVideoUrl } from '../../components/demo/ExerciseDemo';
 
 function useStudent() {
   const { state, studentViewId } = useStore();
@@ -242,11 +244,7 @@ export function Session() {
               </div>
               {entry.discomfort && entry.discomfort.level > 0 && <Badge tone="bad">Desconforto {entry.discomfort.level}</Badge>}
             </div>
-            <details className="mt-2 text-[13px] text-muted">
-              <summary className="cursor-pointer font-semibold text-fg">Como executar</summary>
-              <p className="mt-1">{ex?.instructions}</p>
-              {ex?.commonErrors.length ? <p className="mt-1">Evite: {ex.commonErrors.join('; ').toLowerCase()}.</p> : null}
-            </details>
+            {ex && <HowTo exercise={ex} />}
             {!entry.skipped && (
               <div className="mt-3 flex flex-col gap-2">
                 <div className="grid grid-cols-[28px_1fr_1fr_1fr] gap-2 text-[11px] font-semibold text-muted">
@@ -598,5 +596,24 @@ export function AlunoProfile() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+/** "Como executar": a animação só é montada com o painel aberto, para não animar a lista inteira. */
+function HowTo({ exercise }: { exercise: Exercise }) {
+  const [open, setOpen] = useState(false);
+  const video = safeVideoUrl(exercise.videoUrl);
+  return (
+    <details className="mt-2 text-[13px] text-muted" onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary className="cursor-pointer font-semibold text-fg">Como executar</summary>
+      {open && hasDemo(exercise.id) && <ExerciseDemo exerciseId={exercise.id} name={exercise.name} className="mt-2 max-w-sm" />}
+      <p className="mt-2">{exercise.instructions}</p>
+      {exercise.commonErrors.length ? <p className="mt-1">Evite: {exercise.commonErrors.join('; ').toLowerCase()}.</p> : null}
+      {video && (
+        <a href={video} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 font-semibold text-accent hover:underline">
+          <Play className="h-3.5 w-3.5" /> Ver vídeo do seu personal
+        </a>
+      )}
+    </details>
   );
 }

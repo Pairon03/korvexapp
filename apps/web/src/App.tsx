@@ -15,6 +15,7 @@ import Agents, { AgentEditor } from './pages/personal/Agents';
 import Library, { SubscriptionPage } from './pages/personal/Library';
 import { AlunoAssessment, AlunoHistory, AlunoHome, AlunoProfile, Session } from './pages/aluno/Aluno';
 import Admin from './pages/admin/Admin';
+import { DemoGallery } from './pages/dev/DemoGallery';
 
 function Shell() {
   const { pathname } = useLocation();
@@ -66,6 +67,7 @@ export default function App() {
               <Route path="perfil" element={<AlunoProfile />} />
             </Route>
             <Route path="admin" element={<Admin />} />
+            {import.meta.env.DEV && <Route path="dev/demos" element={<DemoGallery />} />}
             <Route path="inicio" element={<Navigate to="/" replace />} />
             <Route path="*" element={<NotFound />} />
           </Route>
