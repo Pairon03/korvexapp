@@ -43,6 +43,7 @@ import {
   type PlatformState,
   type Student,
 } from '@korvex/core';
+import { aiProvider } from '../../state/ai';
 import { useStore } from '../../state/store';
 import { cycleProgress } from '../../derive';
 import { Badge, Button, Callout, Card, CardHeader, ConfirmButton, CycleBadge, EmptyState, Field, Input, Modal, Progress, Select, Tabs, Textarea, Toggle, cx, LinkButton } from '../../components/ui';
@@ -166,7 +167,7 @@ function TrainingTab({ student, published, draft }: { student: Student; publishe
   const generate = async () => {
     setBusy(true);
     await run(async (d) => {
-      const r = await generateInitialDraft(d, student.id, d.trainer.name);
+      const r = await generateInitialDraft(d, student.id, d.trainer.name, aiProvider());
       if (!r.draft) throw new Error(`A IA não gerou uma proposta válida. ${r.outcome.errors[0] ?? ''} Nenhum treino foi alterado.`);
       return r.draft;
     }, 'Proposta gerada. Revise e publique.');
@@ -750,7 +751,7 @@ function CycleTab({ student }: { student: Student }) {
 
   const retry = async (reviewed: boolean) => {
     setBusy(true);
-    await run((d) => retryCycle(d, current!.id, d.trainer.name, {}, reviewed), (r) => r.message);
+    await run((d) => retryCycle(d, current!.id, d.trainer.name, { provider: aiProvider() }, reviewed), (r) => r.message);
     setBusy(false);
   };
 

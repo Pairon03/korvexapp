@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { CalendarClock, ChevronDown, FlaskConical, Play, RotateCcw, Sun, Moon, SlidersHorizontal } from 'lucide-react';
 import { advanceClock, cycleStateLabel, formatDate, runScheduler, type CycleReport } from '@korvex/core';
 import { useStore } from '../state/store';
+import { aiProvider, geminiAvailable, getAiSource, setAiSource, type AiSource } from '../state/ai';
 import { Badge, Button, Callout, CycleBadge, Modal, Select, cx } from './ui';
 
 const views = [
@@ -35,10 +36,11 @@ export function DemoBar() {
   const [confirmReset, setConfirmReset] = useState(false);
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const [aiSource, setSource] = useState<AiSource>(getAiSource);
 
   const runNow = async () => {
     setRunning(true);
-    const r = await run((d) => runScheduler(d));
+    const r = await run((d) => runScheduler(d, { provider: aiProvider() }));
     setRunning(false);
     if (r) setReport(r);
   };
@@ -66,13 +68,20 @@ export function DemoBar() {
         </label>
         <Select
           id="ai-mode"
-          value={state.settings.aiFailureMode}
-          onChange={(e) => run((s) => void (s.settings.aiFailureMode = e.target.value as typeof s.settings.aiFailureMode))}
+          value={aiSource === 'gemini' ? 'gemini' : state.settings.aiFailureMode}
+          onChange={(e) => {
+            const v = e.target.value;
+            const source: AiSource = v === 'gemini' ? 'gemini' : 'local';
+            setAiSource(source);
+            setSource(source);
+            run((s) => void (s.settings.aiFailureMode = v === 'gemini' ? 'nenhuma' : (v as typeof s.settings.aiFailureMode)));
+          }}
           className="h-7 w-auto py-0 text-[12px]"
         >
           <option value="nenhuma">Funcionando</option>
           <option value="resposta_invalida">Simular resposta inválida</option>
           <option value="indisponivel">Simular indisponível</option>
+          {geminiAvailable && <option value="gemini">Gemini real (teste)</option>}
         </Select>
       </div>
       <Button size="sm" variant="ghost" className="h-7" onClick={() => setConfirmReset(true)}>
