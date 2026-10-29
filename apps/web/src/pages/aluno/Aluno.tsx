@@ -16,6 +16,8 @@ import {
   regionLabel,
   resumeWorkout,
   setPhotoConsent,
+  formatDose,
+  isTimed,
   startWorkout,
   updateLogEntry,
   type BodyRegion,
@@ -238,7 +240,7 @@ export function Session() {
               <div className="min-w-0">
                 <p className="text-[17px] font-bold">{ex?.name}</p>
                 <p className="num text-[13px] text-muted">
-                  {we.sets} × {we.repMin}–{we.repMax} · descanso {we.restSec}s · RPE {we.rpeTarget}
+                  {formatDose(we, ex)} · descanso {we.restSec}s · RPE {we.rpeTarget}
                   {we.suggestedLoadKg != null && <span className="text-accent"> · sugestão {we.suggestedLoadKg} kg</span>}
                 </p>
               </div>
@@ -250,14 +252,14 @@ export function Session() {
                 <div className="grid grid-cols-[28px_1fr_1fr_1fr] gap-2 text-[11px] font-semibold text-muted">
                   <span>#</span>
                   <span>Carga (kg)</span>
-                  <span>Reps</span>
+                  <span>{isTimed(ex) ? 'Segundos' : 'Reps'}</span>
                   <span>RPE</span>
                 </div>
                 {entry.sets.map((s, i) => (
                   <div key={i} className="grid grid-cols-[28px_1fr_1fr_1fr] items-center gap-2">
                     <span className="num text-sm text-muted">{i + 1}</span>
                     <Input aria-label={`Carga da série ${i + 1}`} inputMode="decimal" disabled={!editable} value={s.loadKg ?? ''} onChange={(e) => setSet(entry, i, { loadKg: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) })} className="num h-12 text-base" />
-                    <Input aria-label={`Repetições da série ${i + 1}`} inputMode="numeric" disabled={!editable} value={s.reps ?? ''} onChange={(e) => setSet(entry, i, { reps: e.target.value === '' ? null : Number(e.target.value) })} className="num h-12 text-base" />
+                    <Input aria-label={`${isTimed(ex) ? 'Segundos' : 'Repetições'} da série ${i + 1}`} inputMode="numeric" disabled={!editable} value={s.reps ?? ''} onChange={(e) => setSet(entry, i, { reps: e.target.value === '' ? null : Number(e.target.value) })} className="num h-12 text-base" />
                     <Input aria-label={`Esforço da série ${i + 1}`} inputMode="decimal" disabled={!editable} value={s.rpe ?? ''} onChange={(e) => setSet(entry, i, { rpe: e.target.value === '' ? null : Number(e.target.value.replace(',', '.')) })} className="num h-12 text-base" />
                   </div>
                 ))}

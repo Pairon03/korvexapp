@@ -37,6 +37,8 @@ import {
   validationContext,
   agentConfigFor,
   AssessmentFormSchema,
+  formatDose,
+  isTimed,
   type CircumferenceKey,
   type PlanVersion,
   type SkinfoldProtocol,
@@ -279,7 +281,7 @@ function TrainingTab({ student, published, draft }: { student: Student; publishe
 
 // ---------- Versões ----------
 
-function diffPlans(a: PlanVersion, b: PlanVersion, names: Map<string, string>) {
+function diffPlans(a: PlanVersion, b: PlanVersion, names: Map<string, string>, timed: Set<string>) {
   const rows: { day: string; kind: 'adicionado' | 'removido' | 'alterado' | 'igual'; text: string }[] = [];
   const labels = [...new Set([...a.days.map((d) => d.label), ...b.days.map((d) => d.label)])];
   for (const label of labels) {
@@ -290,11 +292,11 @@ function diffPlans(a: PlanVersion, b: PlanVersion, names: Map<string, string>) {
     for (const e of eb) {
       const prev = ea.find((x) => x.exerciseId === e.exerciseId);
       const n = names.get(e.exerciseId) ?? e.exerciseId;
-      if (!prev) rows.push({ day: label, kind: 'adicionado', text: `${n} · ${e.sets}×${e.repMin}–${e.repMax}` });
+      if (!prev) rows.push({ day: label, kind: 'adicionado', text: `${n} · ${formatDose(e, timed.has(e.exerciseId) ? { measure: 'segundos' } : null)}` });
       else {
         const parts: string[] = [];
         if (prev.sets !== e.sets) parts.push(`séries ${prev.sets}→${e.sets}`);
-        if (prev.repMin !== e.repMin || prev.repMax !== e.repMax) parts.push(`reps ${prev.repMin}–${prev.repMax}→${e.repMin}–${e.repMax}`);
+        if (prev.repMin !== e.repMin || prev.repMax !== e.repMax) parts.push(`${timed.has(e.exerciseId) ? 'segundos' : 'reps'} ${prev.repMin}–${prev.repMax}→${e.repMin}–${e.repMax}`);
         if (prev.restSec !== e.restSec) parts.push(`descanso ${prev.restSec}s→${e.restSec}s`);
         if (prev.suggestedLoadKg !== e.suggestedLoadKg) parts.push(`carga sugerida ${prev.suggestedLoadKg ?? '—'}→${e.suggestedLoadKg ?? '—'} kg`);
         rows.push({ day: label, kind: parts.length ? 'alterado' : 'igual', text: parts.length ? `${n}: ${parts.join(', ')}` : n });
@@ -317,6 +319,7 @@ function VersionsTab({ student }: { student: Student }) {
   const [compareA, setCompareA] = useState<string>(versions[1]?.id ?? '');
   const [compareB, setCompareB] = useState<string>(versions[0]?.id ?? '');
   const names = new Map(state.exercises.map((e) => [e.id, e.name]));
+  const timed = new Set(state.exercises.filter(isTimed).map((e) => e.id));
   const sel = versions.find((v) => v.id === selected);
   const va = versions.find((v) => v.id === compareA);
   const vb = versions.find((v) => v.id === compareB);
@@ -392,7 +395,7 @@ function VersionsTab({ student }: { student: Student }) {
             <div className="p-5">
               {va && vb && (
                 <ul className="flex flex-col gap-1 text-[13px]">
-                  {diffPlans(va, vb, names)
+                  {diffPlans(va, vb, names, timed)
                     .filter((r) => r.kind !== 'igual')
                     .map((r, i) => (
                       <li key={i} className="flex gap-2">
@@ -403,7 +406,7 @@ function VersionsTab({ student }: { student: Student }) {
                         <span className="min-w-0">{r.text}</span>
                       </li>
                     ))}
-                  {diffPlans(va, vb, names).every((r) => r.kind === 'igual') && <li className="text-muted">As duas versões têm o mesmo conteúdo.</li>}
+                  {diffPlans(va, vb, names, timed).every((r) => r.kind === 'igual') && <li className="text-muted">As duas versões têm o mesmo conteúdo.</li>}
                 </ul>
               )}
             </div>
@@ -683,6 +686,7 @@ function LogsTab({ student }: { student: Student }) {
   const { state } = useStore();
   const logs = state.logs.filter((l) => l.studentId === student.id).sort((a, b) => b.date.localeCompare(a.date));
   const names = new Map(state.exercises.map((e) => [e.id, e.name]));
+  const timed = new Set(state.exercises.filter(isTimed).map((e) => e.id));
   const dayLabel = (planVersionId: string, dayId: string) => getPlan(state, student.id)?.versions.find((v) => v.id === planVersionId)?.days.find((d) => d.id === dayId)?.label ?? '—';
   const [openId, setOpenId] = useState<string | null>(null);
   if (!logs.length) return <Card><EmptyState title="Nenhum treino registrado">Os registros do aluno aparecem aqui assim que ele finalizar a primeira sessão.</EmptyState></Card>;
@@ -709,7 +713,7 @@ function LogsTab({ student }: { student: Student }) {
                         <tr key={e.workoutExerciseId} className="border-t border-line align-top">
                           <td className="py-2 pr-3 font-semibold">{names.get(e.exerciseId)}</td>
                           <td className="num py-2 text-muted">
-                            {e.skipped ? 'Não realizado' : e.sets.map((s) => `${s.loadKg ?? '—'}kg×${s.reps ?? '—'}${s.rpe != null ? ` @${s.rpe}` : ''}`).join('  ')}
+                            {e.skipped ? 'Não realizado' : e.sets.map((s) => `${s.loadKg ?? '—'}kg×${s.reps ?? '—'}${timed.has(e.exerciseId) ? 's' : ''}${s.rpe != null ? ` @${s.rpe}` : ''}`).join('  ')}
                             {e.discomfort && e.discomfort.level > 0 && (
                               <p className="font-sans text-bad">
                                 Desconforto {e.discomfort.level}/10 ({e.discomfort.region}). {e.discomfort.note}

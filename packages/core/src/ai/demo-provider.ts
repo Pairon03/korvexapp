@@ -2,6 +2,7 @@ import type { Proposal } from '../schemas';
 import type { AgentConfig, Goal, MovementPattern, MuscleGroup, SplitType, WorkoutDay } from '../types';
 import { round } from '../util';
 import { muscleLabel } from '../labels';
+import { isTimed, timedRange } from '../exercises';
 import type { AgentContext, ExerciseStats } from './context';
 import { AiUnavailableError, type AiProvider } from './provider';
 
@@ -82,12 +83,15 @@ export function buildInitialProposal(ctx: AgentContext): Proposal {
         continue;
       }
       used.add(id);
-      const isolation = ctx.library.find((e) => e.id === id)?.pattern === 'isolamento';
+      const lib = ctx.library.find((e) => e.id === id);
+      const isolation = lib?.pattern === 'isolamento';
+      const range = isTimed(lib)
+        ? timedRange(ctx.student.level)
+        : { repMin: isolation ? Math.max(p.repMin, 10) : p.repMin, repMax: isolation ? Math.max(p.repMax, 15) : p.repMax };
       exercises.push({
         exerciseId: id,
         sets: ctx.student.level === 'iniciante' ? Math.max(2, p.sets - 1) : p.sets,
-        repMin: isolation ? Math.max(p.repMin, 10) : p.repMin,
-        repMax: isolation ? Math.max(p.repMax, 15) : p.repMax,
+        ...range,
         restSec: clamp(isolation ? Math.min(p.rest, 60) : p.rest, cfg.rest.minSec, cfg.rest.maxSec),
         rpeTarget: rpe,
         suggestedLoadKg: null,
@@ -178,8 +182,10 @@ export function buildUpdateProposal(ctx: AgentContext): Proposal {
           changes.push({ kind: 'carga', dayLabel: day.label, before: `${st.lastLoadKg} kg`, after: `${finalLoad} kg (sugestão)`, reason: `Topo da faixa (${we.repMax} reps) atingido nas últimas sessões com RPE ${st.avgRpe ?? 'não informado'}.`, rule: 'progressao.carga', dataUsed });
           return { ...next, suggestedLoadKg: finalLoad, notes: 'Se não completar a faixa mínima, volte à carga anterior.' };
         }
-        const repMax = Math.min(20, we.repMax + 2);
-        changes.push({ kind: 'repeticoes', dayLabel: day.label, before: `${we.repMin}–${we.repMax}`, after: `${we.repMin}–${repMax}`, reason: 'Topo da faixa atingido sem carga registrada.', rule: 'progressao.repeticoes', dataUsed });
+        const timed = isTimed(ctx.library.find((e) => e.id === we.exerciseId));
+        const repMax = timed ? Math.min(180, we.repMax + 10) : Math.min(20, we.repMax + 2);
+        const unit = timed ? ' s' : '';
+        changes.push({ kind: 'repeticoes', dayLabel: day.label, before: `${we.repMin}–${we.repMax}${unit}`, after: `${we.repMin}–${repMax}${unit}`, reason: timed ? 'Tempo máximo da faixa sustentado nas últimas sessões.' : 'Topo da faixa atingido sem carga registrada.', rule: 'progressao.repeticoes', dataUsed });
         return { ...next, repMax };
       }
 

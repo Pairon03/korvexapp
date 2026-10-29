@@ -43,6 +43,8 @@ export type MovementPattern =
 /** Regiões usadas para cruzar limitações do aluno com cuidados do exercício. */
 export type BodyRegion = 'ombro' | 'joelho' | 'lombar' | 'cotovelo' | 'punho' | 'quadril' | 'tornozelo';
 
+export type ExerciseMeasure = 'reps' | 'segundos';
+
 export interface Exercise {
   id: ID;
   name: string;
@@ -60,6 +62,8 @@ export interface Exercise {
   substitutes: ID[];
   /** Link de um vídeo gravado pelo personal (YouTube, Drive...). Abre fora do app. */
   videoUrl?: string;
+  /** 'segundos' para exercícios de sustentação (prancha): repMin/repMax passam a ser segundos. */
+  measure?: ExerciseMeasure;
   custom: boolean;
   active: boolean;
   validated: boolean;
@@ -165,6 +169,7 @@ export interface WorkoutExercise {
   id: ID;
   exerciseId: ID;
   sets: number;
+  /** Repetições, ou segundos quando o exercício é medido em tempo (Exercise.measure). */
   repMin: number;
   repMax: number;
   restSec: number;
@@ -232,6 +237,7 @@ export interface WorkoutPlan {
 
 export interface LoggedSet {
   loadKg: number | null;
+  /** Repetições feitas, ou segundos sustentados em exercícios de tempo. */
   reps: number | null;
   rpe: number | null;
 }

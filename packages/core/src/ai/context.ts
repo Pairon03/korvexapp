@@ -54,7 +54,7 @@ export interface AgentContext {
     previous: { date: string; weightKg: number | null; waistCm: number | null } | null;
     current: { date: string; weightKg: number | null; waistCm: number | null } | null;
   };
-  library: Pick<Exercise, 'id' | 'name' | 'primary' | 'secondary' | 'pattern' | 'equipment' | 'cautionRegions' | 'substitutes' | 'complexity'>[];
+  library: Pick<Exercise, 'id' | 'name' | 'primary' | 'secondary' | 'pattern' | 'equipment' | 'cautionRegions' | 'substitutes' | 'complexity' | 'measure'>[];
 }
 
 export function computeStats(plan: PlanVersion, logs: WorkoutLog[], agent: AgentConfig): ExerciseStats[] {
@@ -145,8 +145,9 @@ export function buildAgentContext(
     assessments: { previous: summarize(assessments[1]), current: summarize(assessments[0]) },
     library: state.exercises
       .filter((e) => e.active)
-      .map(({ id, name, primary, secondary, pattern, equipment, cautionRegions, substitutes, complexity }) => ({
+      .map(({ id, name, primary, secondary, pattern, equipment, cautionRegions, substitutes, complexity, measure }) => ({
         id, name, primary, secondary, pattern, equipment, cautionRegions, substitutes, complexity,
+        ...(measure === 'segundos' ? { measure } : {}),
       })),
   };
 }
