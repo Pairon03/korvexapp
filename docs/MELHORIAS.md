@@ -13,9 +13,9 @@ as validações, o construtor de treino, o app do aluno e o painel admin funcion
 |---|---|
 | Nome **FitCore** e frase "Você orienta. A tecnologia acompanha." | Feito: nome "FitCore Korvex" e frase no topo da landing |
 | Pergunta "O ciclo sempre altera o treino após 45 dias?" | Feito: entrou nas perguntas frequentes |
-| Avisos honestos sobre o que ainda não está ativo (IA, cobrança) | Já existe na barra de demonstração; repetir no app real enquanto um provedor não estiver configurado |
-| Cabeçalhos de segurança no deploy (CSP, HSTS, X-Frame-Options, Permissions-Policy) | Fazer no deploy da Vercel (`vercel.json`) junto com o backend |
-| Navegação "Programas" e "Avaliações" como itens próprios no painel | Avaliar: hoje ficam dentro da ficha do aluno |
+| Avisos honestos sobre o que ainda não está ativo (IA, cobrança) | Já existe na barra de demonstração; a rota do Gemini avisa quando a chave não está configurada |
+| Cabeçalhos de segurança no deploy (CSP, HSTS, X-Frame-Options, Permissions-Policy) | Feito: `apps/web/vercel.json` |
+| Navegação "Programas" e "Avaliações" como itens próprios no painel | Feito para Avaliações: nova tela no painel com a situação de cada aluno. Programas continuam na ficha do aluno |
 | Cartão do hero com o fluxo em 4 passos com ícones | Opcional: a landing já tem a seção "Como um ciclo funciona" |
 | Rotas `/termos`, `/privacidade`, `/painel` separadas | Já existem aqui |
 
