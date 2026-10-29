@@ -14,3 +14,5 @@ export * from './seed';
 export * from './ai/context';
 export * from './ai/provider';
 export * from './ai/demo-provider';
+export * from './ai/remote-provider';
+export * from './ai/gemini-provider';

@@ -9,6 +9,7 @@ import Dashboard from './pages/personal/Dashboard';
 import Students, { NewStudent } from './pages/personal/Students';
 import StudentDetail from './pages/personal/StudentDetail';
 import Builder from './pages/personal/Builder';
+import Assessments from './pages/personal/Assessments';
 import Cycles, { Notifications } from './pages/personal/Cycles';
 import Agents, { AgentEditor } from './pages/personal/Agents';
 import Library, { SubscriptionPage } from './pages/personal/Library';
@@ -17,7 +18,10 @@ import Admin from './pages/admin/Admin';
 
 function Shell() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  // Navegadores novos fazem scrollTo devolver uma Promise; o efeito não pode retorná-la (React trataria como limpeza).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return (
     <>
       <DemoBar />
@@ -46,6 +50,7 @@ export default function App() {
               <Route path="alunos/novo" element={<NewStudent />} />
               <Route path="alunos/:id" element={<StudentDetail />} />
               <Route path="alunos/:id/editar-treino" element={<Builder />} />
+              <Route path="avaliacoes" element={<Assessments />} />
               <Route path="ciclos" element={<Cycles />} />
               <Route path="agentes" element={<Agents />} />
               <Route path="agentes/:id" element={<AgentEditor />} />

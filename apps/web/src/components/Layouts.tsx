@@ -57,6 +57,7 @@ export function Toasts() {
 const personalNav = [
   { to: '/personal', label: 'Painel', icon: LayoutDashboard, end: true },
   { to: '/personal/alunos', label: 'Alunos', icon: Users },
+  { to: '/personal/avaliacoes', label: 'Avaliações', icon: Ruler },
   { to: '/personal/ciclos', label: 'Ciclos', icon: RefreshCcw },
   { to: '/personal/agentes', label: 'Agentes', icon: Bot },
   { to: '/personal/exercicios', label: 'Exercícios', icon: Dumbbell },
