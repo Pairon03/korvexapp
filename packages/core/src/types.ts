@@ -58,6 +58,8 @@ export interface Exercise {
   /** Regiões que exigem cuidado. Bloqueia o exercício para alunos com limitação nessa região. */
   cautionRegions: BodyRegion[];
   substitutes: ID[];
+  /** Link de um vídeo gravado pelo personal (YouTube, Drive...). Abre fora do app. */
+  videoUrl?: string;
   custom: boolean;
   active: boolean;
   validated: boolean;

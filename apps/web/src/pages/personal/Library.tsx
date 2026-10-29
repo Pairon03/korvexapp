@@ -17,6 +17,7 @@ import {
   type Subscription,
 } from '@korvex/core';
 import { useStore } from '../../state/store';
+import { ExerciseDemo, hasDemo, safeVideoUrl } from '../../components/demo/ExerciseDemo';
 import { Badge, Button, Callout, Card, CardHeader, EmptyState, Field, Input, Modal, PageHeader, Progress, Select, Textarea, cx } from '../../components/ui';
 
 export default function Library() {
@@ -114,6 +115,7 @@ export default function Library() {
               </button>
               {openId === e.id && (
                 <div className="flex flex-col gap-2 border-t border-line p-4 text-[13px]">
+                  {hasDemo(e.id) && <ExerciseDemo exerciseId={e.id} name={e.name} className="max-w-sm" />}
                   <p>{e.instructions}</p>
                   {e.commonErrors.length > 0 && (
                     <p className="text-muted">
@@ -125,7 +127,10 @@ export default function Library() {
                       <strong className="text-fg">Substituições:</strong> {e.substitutes.map((s) => byId.get(s)?.name).filter(Boolean).join(', ')}
                     </p>
                   )}
-                  <p className="text-[12px] text-faint">Mídia: nenhuma vinculada · status {e.validated ? 'validado' : 'em revisão'}</p>
+                  <VideoLink exercise={e} />
+                  <p className="text-[12px] text-faint">
+                    {hasDemo(e.id) ? 'Animação ilustrativa inclusa' : 'Sem animação (exercício próprio)'} · status {e.validated ? 'validado' : 'em revisão'}
+                  </p>
                   <div>
                     <Button
                       size="sm"
@@ -149,6 +154,33 @@ export default function Library() {
       )}
       <NewExercise open={creating} onClose={() => setCreating(false)} />
     </div>
+  );
+}
+
+/** Link de vídeo próprio do personal; aparece para o aluno em "Como executar". */
+function VideoLink({ exercise }: { exercise: Exercise }) {
+  const { run } = useStore();
+  const [value, setValue] = useState(exercise.videoUrl ?? '');
+  const [error, setError] = useState('');
+  const save = () => {
+    const url = value.trim();
+    if (url && !safeVideoUrl(url)) return setError('Use um link completo que comece com https://');
+    setError('');
+    run((d) => {
+      const x = d.exercises.find((y) => y.id === exercise.id)!;
+      x.videoUrl = url || undefined;
+      audit(d, d.trainer.name, 'editou_exercicio', `exercicio:${x.id}`, url ? 'vinculou vídeo' : 'removeu vídeo');
+    }, url ? 'Vídeo vinculado. O aluno verá o link em "Como executar".' : 'Vídeo removido.');
+  };
+  return (
+    <Field label="Seu vídeo (opcional)" htmlFor={`vid-${exercise.id}`} error={error} hint="Cole um link do YouTube, Drive ou Instagram com você executando o exercício.">
+      <div className="flex gap-2">
+        <Input id={`vid-${exercise.id}`} inputMode="url" placeholder="https://" value={value} onChange={(ev) => setValue(ev.target.value)} />
+        <Button size="sm" variant="secondary" onClick={save} disabled={value.trim() === (exercise.videoUrl ?? '')}>
+          Salvar
+        </Button>
+      </div>
+    </Field>
   );
 }
 
