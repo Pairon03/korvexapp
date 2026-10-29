@@ -5,9 +5,11 @@ import {
   agentConfigFor,
   getPlan,
   getPublished,
+  isTimed,
   muscleLabel,
   publishAndTrack,
   saveDraft,
+  timedRange,
   validatePlan,
   validationContext,
   type CardioPrescription,
@@ -110,7 +112,7 @@ export default function Builder() {
                     <tr className="text-left text-[11px] text-muted">
                       <th className="px-4 py-2 font-semibold">Exercício</th>
                       <th className="w-16 py-2 font-semibold">Séries</th>
-                      <th className="w-32 py-2 font-semibold">Reps</th>
+                      <th className="w-32 py-2 font-semibold">Reps / seg.</th>
                       <th className="w-20 py-2 font-semibold">Desc. (s)</th>
                       <th className="w-16 py-2 font-semibold">RPE</th>
                       <th className="w-24" />
@@ -131,9 +133,10 @@ export default function Builder() {
                           </td>
                           <td className="py-2 pr-2">
                             <div className="flex items-center gap-1">
-                              <Input aria-label="Repetições mínimas" type="number" value={we.repMin} onChange={(e) => updateEx(d.id, we.id, { repMin: Number(e.target.value) })} className="num h-8 px-2" />
+                              <Input aria-label={isTimed(ex) ? 'Segundos mínimos' : 'Repetições mínimas'} type="number" value={we.repMin} onChange={(e) => updateEx(d.id, we.id, { repMin: Number(e.target.value) })} className="num h-8 px-2" />
                               <span className="text-faint">–</span>
-                              <Input aria-label="Repetições máximas" type="number" value={we.repMax} onChange={(e) => updateEx(d.id, we.id, { repMax: Number(e.target.value) })} className="num h-8 px-2" />
+                              <Input aria-label={isTimed(ex) ? 'Segundos máximos' : 'Repetições máximas'} type="number" value={we.repMax} onChange={(e) => updateEx(d.id, we.id, { repMax: Number(e.target.value) })} className="num h-8 px-2" />
+                              {isTimed(ex) && <span className="text-faint">s</span>}
                             </div>
                           </td>
                           <td className="py-2 pr-2">
@@ -234,7 +237,7 @@ export default function Builder() {
             ...d,
             exercises: [
               ...d.exercises,
-              { id: tid('e'), exerciseId: ex.id, sets: 3, repMin: 8, repMax: 12, restSec: Math.min(Math.max(90, cfg.rest.minSec), cfg.rest.maxSec), rpeTarget: cfg.effort.targetRpeMax - 0.5, suggestedLoadKg: null, notes: '' },
+              { id: tid('e'), exerciseId: ex.id, sets: 3, ...(isTimed(ex) ? timedRange(student.level) : { repMin: 8, repMax: 12 }), restSec: Math.min(Math.max(90, cfg.rest.minSec), cfg.rest.maxSec), rpeTarget: cfg.effort.targetRpeMax - 0.5, suggestedLoadKg: null, notes: '' },
             ],
           }));
           setPicker(null);

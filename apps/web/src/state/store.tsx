@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { createSeedState, SCHEMA_VERSION, type PlatformState } from '@korvex/core';
+import { createSeedState, migrateTimedExercises, SCHEMA_VERSION, type PlatformState } from '@korvex/core';
 
 // No protótipo, o "servidor" roda no navegador e o estado fica no localStorage.
 // Em produção, cada ação abaixo vira uma chamada autenticada à API.
@@ -10,7 +10,7 @@ function load(): PlatformState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as PlatformState;
-      if (parsed.schemaVersion === SCHEMA_VERSION) return parsed;
+      if (parsed.schemaVersion === SCHEMA_VERSION) return migrateTimedExercises(parsed);
     }
   } catch {
     /* armazenamento indisponível: segue com dados novos */

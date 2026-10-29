@@ -1,3 +1,4 @@
+import { isTimed, rangeLimits } from './exercises';
 import { muscleLabel, regionLabel } from './labels';
 import type { AgentConfig, Exercise, PlanVersion, Student, ValidationResult, WorkoutDay } from './types';
 import { totalWeeklySets, weeklySetsByMuscle } from './volume';
@@ -61,7 +62,9 @@ export function validatePlan(plan: PlanLike, ctx: ValidationContext): Validation
     for (const we of day.exercises) {
       const name = byId.get(we.exerciseId)?.name ?? we.exerciseId;
       if (we.sets < 1 || we.sets > 8) paramIssues.push(`${name}: ${we.sets} séries`);
-      if (we.repMin < 1 || we.repMax > 30 || we.repMin > we.repMax) paramIssues.push(`${name}: faixa ${we.repMin}–${we.repMax} repetições`);
+      const lim = rangeLimits(byId.get(we.exerciseId)?.measure);
+      if (we.repMin < lim.min || we.repMax > lim.max || we.repMin > we.repMax)
+        paramIssues.push(`${name}: faixa ${we.repMin}–${we.repMax} ${isTimed(byId.get(we.exerciseId)) ? 'segundos' : 'repetições'}`);
       if (we.restSec < agent.rest.minSec || we.restSec > agent.rest.maxSec)
         paramIssues.push(`${name}: descanso ${we.restSec}s fora de ${agent.rest.minSec}–${agent.rest.maxSec}s`);
       if (we.rpeTarget < 5 || we.rpeTarget > 10) paramIssues.push(`${name}: RPE ${we.rpeTarget}`);

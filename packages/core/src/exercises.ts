@@ -1,4 +1,4 @@
-import type { BodyRegion, Equipment, Exercise, MovementPattern, MuscleGroup } from './types';
+import type { BodyRegion, Equipment, Exercise, ExerciseMeasure, MovementPattern, MuscleGroup, WorkoutExercise } from './types';
 
 // Biblioteca inicial. Textos próprios; nenhuma mídia de terceiros incluída.
 // A IA só pode selecionar IDs desta lista (ou exercícios próprios do personal).
@@ -16,6 +16,9 @@ type Def = [
   instructions: string,
   errors: string[],
 ];
+
+/** Exercícios de sustentação: a faixa é em segundos, não em repetições. */
+const TIMED = new Set(['ex_prancha']);
 
 const defs: Def[] = [
   ['ex_supino_reto', 'Supino reto com barra', 'peito', ['triceps', 'ombros'], 'empurrar_horizontal', ['barra'], 2, ['ombro'], ['ex_supino_halteres', 'ex_supino_maquina', 'ex_flexao'],
@@ -110,8 +113,69 @@ export const EXERCISES: Exercise[] = defs.map(
     commonErrors,
     cautionRegions,
     substitutes,
+    ...(TIMED.has(id) ? { measure: 'segundos' as const } : {}),
     custom: false,
     active: true,
     validated: true,
   }),
 );
+
+export function isTimed(ex: Pick<Exercise, 'measure'> | undefined | null): boolean {
+  return ex?.measure === 'segundos';
+}
+
+/** Faixa padrão de sustentação por nível, em segundos. */
+export function timedRange(level: 'iniciante' | 'intermediario' | 'avancado'): { repMin: number; repMax: number } {
+  return level === 'iniciante' ? { repMin: 20, repMax: 30 } : level === 'intermediario' ? { repMin: 30, repMax: 45 } : { repMin: 45, repMax: 60 };
+}
+
+/** Limites aceitos na faixa: repetições 1–30, segundos 10–180. */
+export function rangeLimits(measure: ExerciseMeasure | undefined): { min: number; max: number } {
+  return measure === 'segundos' ? { min: 10, max: 180 } : { min: 1, max: 30 };
+}
+
+/** "8–12" ou "30–45 s"; faixa de um valor só aparece sem traço. */
+export function formatRange(we: Pick<WorkoutExercise, 'repMin' | 'repMax'>, ex: Pick<Exercise, 'measure'> | undefined | null): string {
+  const range = we.repMin === we.repMax ? `${we.repMin}` : `${we.repMin}–${we.repMax}`;
+  return isTimed(ex) ? `${range} s` : range;
+}
+
+/** "3 × 8–12" ou "3 × 30–45 s". */
+export function formatDose(we: Pick<WorkoutExercise, 'sets' | 'repMin' | 'repMax'>, ex: Pick<Exercise, 'measure'> | undefined | null): string {
+  return `${we.sets} × ${formatRange(we, ex)}`;
+}
+
+/**
+ * Ajusta um estado salvo antes da medida em tempo existir: marca os exercícios do catálogo
+ * e troca faixas impossíveis (ex.: prancha "1–1") pela faixa padrão em segundos do nível do aluno.
+ */
+export function migrateTimedExercises<
+  S extends {
+    exercises: Exercise[];
+    students: { id: string; level: 'iniciante' | 'intermediario' | 'avancado' }[];
+    plans: { studentId: string; versions: { days: { exercises: WorkoutExercise[] }[] }[] }[];
+  },
+>(state: S): S {
+  const catalog = new Map(EXERCISES.map((e) => [e.id, e]));
+  const exercises = state.exercises.map((e) => {
+    const measure = catalog.get(e.id)?.measure;
+    return measure && !e.measure ? { ...e, measure } : e;
+  });
+  const timed = new Set(exercises.filter(isTimed).map((e) => e.id));
+  const plans = state.plans.map((plan) => {
+    const level = state.students.find((s) => s.id === plan.studentId)?.level ?? 'intermediario';
+    return {
+      ...plan,
+      versions: plan.versions.map((v) => ({
+        ...v,
+        days: v.days.map((d) => ({
+          ...d,
+          exercises: d.exercises.map((we) =>
+            timed.has(we.exerciseId) && we.repMax < rangeLimits('segundos').min ? { ...we, ...timedRange(level) } : we,
+          ),
+        })),
+      })),
+    };
+  });
+  return { ...state, exercises, plans };
+}

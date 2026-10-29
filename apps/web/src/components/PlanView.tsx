@@ -1,6 +1,6 @@
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
-import { muscleLabel, weeklySetsByMuscle, type Exercise, type PlanVersion, type ValidationResult, type MuscleGroup } from '@korvex/core';
+import { formatDose, muscleLabel, weeklySetsByMuscle, type Exercise, type PlanVersion, type ValidationResult, type MuscleGroup } from '@korvex/core';
 import { Badge, cx } from './ui';
 
 export function PlanDays({ plan, exercises, compact }: { plan: Pick<PlanVersion, 'days' | 'cardio'>; exercises: Exercise[]; compact?: boolean }) {
@@ -22,7 +22,7 @@ export function PlanDays({ plan, exercises, compact }: { plan: Pick<PlanVersion,
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">{ex?.name ?? <span className="text-bad">Exercício desconhecido ({we.exerciseId})</span>}</p>
                     <p className="num text-[12px] text-muted">
-                      {we.sets} × {we.repMin}–{we.repMax} · {we.restSec}s · RPE {we.rpeTarget}
+                      {formatDose(we, ex)} · {we.restSec}s · RPE {we.rpeTarget}
                       {we.suggestedLoadKg != null && <span className="text-accent"> · {we.suggestedLoadKg} kg sugeridos</span>}
                     </p>
                     {we.notes && <p className="text-[12px] text-faint">{we.notes}</p>}
